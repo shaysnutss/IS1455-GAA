@@ -4,14 +4,19 @@ project:
 website:
   title: "IS1455-GAA"
   navbar:
-    left:
+    left: 
+      - text: "Hands-on Exercise"
+        menu: 
+         - text: "Hands-on Exercise 1"
+           href: "Hands-On_Ex/Hands-on_Ex01/Hands-on_Ex01.html"
+    right:
       - href: index.qmd
         text: Home
       - about.qmd
 
 format:
   html:
-    theme: cosmo
+    theme: lux
     css: styles.css
     toc: true
 
