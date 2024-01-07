@@ -1,0 +1,69 @@
+---
+title: "Hands-On Exercise 1 : Geospatial Wrangling With R"
+
+execute: 
+  warning: false
+date: "`r Sys.Date()`"
+---
+
+Hello! In this page, i will be describing how i performed data wrangling - which is basically cleaning and transforming raw data into a more structured and usable format or later analysis.
+
+### Installing and loading R packages
+
+In this section, I will install and load 'tidyverse' and 'sf' packages.
+
+##### What are the sf and tidyverse packages?
+
+Let me give you a break down.
+
+###### [**Tidyverse Package**]{.underline}
+
+Imagine you have a pile of dirty data that you need to handle. The Tidyverse package helps you handle your data. It actually has a bunch of packages within it to help handle data. It can do the following:
+
+1.  readr - reading and writing data into or out of a spreadsheet
+
+2.  tidyr - organizing and tidying up your data
+
+3.  ggplot2 - visualizing your data
+
+4.  dpylr - mainpulating your data, like doing some basic math to it.
+
+###### [**SF Package**]{.underline}
+
+SF package provides us with tools to work with data related to maps and geospatial data. It can
+
+1.  Read and write geospatial data from and into files.
+2.  Manipulate data - like cut out a specific area on a map
+3.  Visualize data
+
+Now let's load the packages into our environment.
+
+```{r}
+
+# Loads the p_load function on pacman which checks if packages are available, and then loads them into the R environment.
+pacman::p_load(tidyverse, sf)
+
+```
+
+### Importing the geospatial data in shapefile format
+
+Shapefile format stores geographic location and attribute information of geographic features.
+
+```{r}
+
+#st_read is a function from the SF package which helps with the handling of data. We read the data into the variable mpsz.
+
+mpsz <- st_read(dsn = "data/geospatial",
+ layer  = "MP14_SUBZONE_WEB_PL")
+
+```
+
+## Plotting Data
+
+Now, let's plot the data in our mpsz as a visualization. We use the plot() function for it.
+
+```{r}
+
+plot(mpsz)
+
+```

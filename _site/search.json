@@ -12,5 +12,40 @@
     "title": "About",
     "section": "",
     "text": "About this site\n\n1 + 1\n\n[1] 2"
+  },
+  {
+    "objectID": "index.html#installing-and-loading-r-packages",
+    "href": "index.html#installing-and-loading-r-packages",
+    "title": "IS1455-GAA",
+    "section": "Installing and loading R packages",
+    "text": "Installing and loading R packages\nIn this section, I will install and load ‘tidyverse’ and ‘sf’ packages.\n\n# Loads the p_load function on pacman which checks if packages are available, and then loads them into the R environment.\npacman::p_load(tidyverse, sf)"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-On_Ex01.html",
+    "href": "Hands-on_Ex/Hands-on_Ex01/Hands-On_Ex01.html",
+    "title": "Hands-On Exercise 1 : Geospatial Wrangling With R",
+    "section": "",
+    "text": "Hello! In this page, i will be describing how i performed data wrangling - which is basically cleaning and transforming raw data into a more structured and usable format or later analysis."
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-On_Ex01.html#installing-and-loading-r-packages",
+    "href": "Hands-on_Ex/Hands-on_Ex01/Hands-On_Ex01.html#installing-and-loading-r-packages",
+    "title": "Hands-On Exercise 1 : Geospatial Wrangling With R",
+    "section": "",
+    "text": "In this section, I will install and load ‘tidyverse’ and ‘sf’ packages.\n\n\nLet me give you a break down.\n\n\nImagine you have a pile of dirty data that you need to handle. The Tidyverse package helps you handle your data. It actually has a bunch of packages within it to help handle data. It can do the following:\n\nreadr - reading and writing data into or out of a spreadsheet\ntidyr - organizing and tidying up your data\nggplot2 - visualizing your data\ndpylr - mainpulating your data, like doing some basic math to it.\n\n\n\n\nSF package provides us with tools to work with data related to maps and geospatial data. It can\n\nRead and write geospatial data from and into files.\nManipulate data - like cut out a specific area on a map\nVisualize data\n\nNow let’s load the packages into our environment.\n\n# Loads the p_load function on pacman which checks if packages are available, and then loads them into the R environment.\npacman::p_load(tidyverse, sf)"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-On_Ex01.html#importing-the-geospatial-data-in-shapefile-format",
+    "href": "Hands-on_Ex/Hands-on_Ex01/Hands-On_Ex01.html#importing-the-geospatial-data-in-shapefile-format",
+    "title": "Hands-On Exercise 1 : Geospatial Wrangling With R",
+    "section": "",
+    "text": "Shapefile format stores geographic location and attribute information of geographic features.\n\n#st_read is a function from the SF package which helps with the handling of data. We read the data into the variable mpsz.\n\nmpsz &lt;- st_read(dsn = \"data/geospatial\",\n layer  = \"MP14_SUBZONE_WEB_PL\")\n\nReading layer `MP14_SUBZONE_WEB_PL' from data source \n  `C:\\shaysnutss\\IS1455-GAA\\Hands-on_Ex\\Hands-on_Ex01\\data\\geospatial' \n  using driver `ESRI Shapefile'\nSimple feature collection with 323 features and 15 fields\nGeometry type: MULTIPOLYGON\nDimension:     XY\nBounding box:  xmin: 2667.538 ymin: 15748.72 xmax: 56396.44 ymax: 50256.33\nProjected CRS: SVY21"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-On_Ex01.html#plotting-data",
+    "href": "Hands-on_Ex/Hands-on_Ex01/Hands-On_Ex01.html#plotting-data",
+    "title": "Hands-On Exercise 1 : Geospatial Wrangling With R",
+    "section": "Plotting Data",
+    "text": "Plotting Data\nNow, let’s plot the data in our mpsz as a visualization. We use the plot() function for it.\n\nplot(mpsz)"
   }
 ]
