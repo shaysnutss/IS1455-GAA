@@ -8,7 +8,7 @@ date: "`r Sys.Date()`"
 
 Hello! In this page, i will be describing how i performed data wrangling - which is basically cleaning and transforming raw data into a more structured and usable format or later analysis.
 
-### Installing and loading R packages
+## Installing and loading R packages
 
 In this section, I will install and load 'tidyverse' and 'sf' packages.
 
@@ -45,9 +45,25 @@ pacman::p_load(tidyverse, sf)
 
 ```
 
+## Importing geospatial data
+
 ### Importing the geospatial data in shapefile format
 
+Here we import the geospatial data which is in shapefile format as a a polygon feature data frame.
+
+##### What is a shapefile and what is a polygon feature data frame?
+
+###### [**Shapefile**]{.underline}
+
 Shapefile format stores geographic location and attribute information of geographic features.
+
+###### [**Polygon feature data frame**]{.underline}
+
+Think of polygons as shapes that represent areas on a map.
+
+Data frames store details about the polygons (think area) on tables.
+
+So polygon feature data frames store data about areas on the map.
 
 ```{r}
 
@@ -58,12 +74,137 @@ mpsz <- st_read(dsn = "data/geospatial",
 
 ```
 
+### Importing polyline feature data in shapefile form
+
+##### What is a polyline feature data frame?
+
+A polyline is made up of connected points and can represent things such as roads, rivers, or hiking trails.
+
+Feature Data Frames store information about these lines, like what is the name of the road, how long is it, what's its surface?
+
+A polyline feature data frame stores information on lines that represent routes or rivers on a map.
+
+Now let's import the polyline feature data
+
+```{r}
+
+cyclingpath = st_read(dsn = "data/geospatial", 
+                         layer = "CyclingPathGazette")
+
+```
+
+### Importing GIS data in kml format
+
+##### What is a GIS data and kml format ?
+
+###### [**kml format**]{.underline}
+
+It is keyhole markup language used to describe places and features on a digital map. You can define shapes like drawing a line to show a hiking trail or a polygon to show a lake. You can also attach information to places.
+
+###### [**GIS data**]{.underline}
+
+A map has information like shapes, paths, data and locations. GIS data is when all this information is organized in a computer friendly way. People use these data to analyse the environment, plan cities and much more.
+
+Now let's import GIS data in kml format.
+
+```{r}
+
+preschool = st_read("data/geospatial/PreSchoolsLocation.kml")
+
+```
+
+## Checking out the contents of a simple feature data frame
+
+### st_geometry
+
+Shapes represent areas on a map. The data.frame in the package sf contains a column, and that column contains a list of those shapes in the specific class called 'sfc'.
+
+Let's execute this command
+
+```{r}
+
+st_geometry(mpsz)
+```
+This commands tells you a few things:
+
+1. The types of shapes you're dealing with. Multipolygon means its an area with multiple connected lines.
+
+2. The bounding box/ range of coordinates that coer the same
+
+3. Also the first 5 shapes in the column of the data frame
+
+### glimpse
+
+Let's execute this command
+
+```{r}
+
+glimpse(mpsz)
+
+```
+
+This command gives you a glimpse into the dataset.
+
+it tells you the following things:
+
+1. the number of rows
+2. the number of columns
+3. what columns are there
+4. data type of each column
+4. first few values of each column
+
+### head()
+
+Let's execute this command
+
+```{r}
+
+head(mpsz, n=5) 
+
+```
+
+This provides you with complete information (columns and the number of values u want).
+
+
+
 ## Plotting Data
 
 Now, let's plot the data in our mpsz as a visualization. We use the plot() function for it.
+
+This provides the entire visualization.
 
 ```{r}
 
 plot(mpsz)
 
 ```
+
+If you want to just plot the different shapes in the map, we can do this:
+
+```{r}
+
+plot(st_geometry(mpsz))
+
+```
+
+If you want to plot just based off of one column/attribute, you can do this. Each color reprsents the a row.
+
+```{r}
+
+plot(mpsz["PLN_AREA_N"])
+
+```
+
+## Working with projection
+
+There are multiple ways you can study geography. You can study it if it were on a flat piece of paper or curved 3d way on your laptop screen.
+
+When there are two different ways of expressing geography, the way the data is, is differnet. If you want to use two sets of geospatial data, you want to ensure the data has the same projection, i.e. represents locations on the earth's surface the same way. 
+Hence, you will have to translate one of the maps to the same  projection of another.
+
+
+
+
+## 
+
+
