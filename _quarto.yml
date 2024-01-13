@@ -2,13 +2,19 @@ project:
   type: website
 
 website:
-  title: "IS1455-GAA"
+  title: "IS415-GAA"
   navbar:
     left: 
       - text: "Hands-on Exercise"
         menu: 
          - text: "Hands-on Exercise 1"
            href: "Hands-On_Ex/Hands-on_Ex01/Hands-on_Ex01.html"
+         - text: "Hands-on Exercise 2"
+           href: "Hands-On_Ex/Hands-on_Ex02/Hands-on_Ex02.html"
+      - text: "In-class Exercise"
+        menu: 
+         - text: "In-class Exercise 1"
+           href: "In-class/In-class_Ex01/In-class_Ex01.html"
     right:
       - href: index.qmd
         text: Home

@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-01-07">
+<meta name="dcterms.date" content="2024-01-13">
 
-<title>IS1455-GAA - Hands-On Exercise 1 : Geospatial Wrangling With R</title>
+<title>IS415-GAA - Hands-On Exercise 1 : Geospatial Wrangling With R</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -107,7 +107,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
     <a class="navbar-brand" href="../../index.html">
-    <span class="navbar-title">IS1455-GAA</span>
+    <span class="navbar-title">IS415-GAA</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -124,6 +124,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li>
     <a class="dropdown-item" href="../../Hands-On_Ex/Hands-on_Ex01/Hands-on_Ex01.html" rel="" target="">
  <span class="dropdown-text">Hands-on Exercise 1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-On_Ex/Hands-on_Ex02/Hands-on_Ex02.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 2</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-in-class-exercise" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">In-class Exercise</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-in-class-exercise">    
+        <li>
+    <a class="dropdown-item" href="../../In-class/In-class_Ex01/In-class_Ex01.html" rel="" target="">
+ <span class="dropdown-text">In-class Exercise 1</span></a>
   </li>  
     </ul>
   </li>
@@ -174,7 +189,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#what-is-aspatial-data" id="toc-what-is-aspatial-data" class="nav-link" data-scroll-target="#what-is-aspatial-data">What is aspatial data?</a></li>
   <li><a href="#import-spatial-data" id="toc-import-spatial-data" class="nav-link" data-scroll-target="#import-spatial-data">Import spatial data</a></li>
   </ul></li>
-  <li><a href="#geoprocessing-with-sf-package" id="toc-geoprocessing-with-sf-package" class="nav-link" data-scroll-target="#geoprocessing-with-sf-package">Geoprocessing with sf package</a></li>
+  <li><a href="#geoprocessing-with-sf-package" id="toc-geoprocessing-with-sf-package" class="nav-link" data-scroll-target="#geoprocessing-with-sf-package">Geoprocessing with sf package</a>
+  <ul class="collapse">
+  <li><a href="#buffering" id="toc-buffering" class="nav-link" data-scroll-target="#buffering">Buffering</a></li>
+  <li><a href="#point-in-polygon-count" id="toc-point-in-polygon-count" class="nav-link" data-scroll-target="#point-in-polygon-count">Point-in-polygon count</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -194,7 +213,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">January 7, 2024</p>
+      <p class="date">January 13, 2024</p>
     </div>
   </div>
   
@@ -638,8 +657,10 @@ $ geometry                       &lt;POINT [m]&gt; POINT (41972.5 36390.05), POI
 <section id="geoprocessing-with-sf-package" class="level2">
 <h2 class="anchored" data-anchor-id="geoprocessing-with-sf-package">Geoprocessing with sf package</h2>
 <p>Here, we will be learning about buffering and point in polygon.</p>
-<p>###Buffering</p>
-<p>####What is bufferring</p>
+<section id="buffering" class="level3">
+<h3 class="anchored" data-anchor-id="buffering">Buffering</h3>
+<section id="what-is-bufferring" class="level4">
+<h4 class="anchored" data-anchor-id="what-is-bufferring">What is bufferring</h4>
 <p>Let’s say there is a point of interest like a cycling path You want to analyse a certain amount of area around it, and the amount would be the buffer. Let’s say buffer is 5, you would want to study the area in a 5 mile radius around it.</p>
 <p>Let’s have another working scenario:</p>
 <p>The authority is planning to upgrade the exiting cycling path. To do so, they need to acquire 5 metres of reserved land on the both sides of the current cycling path. You are tasked to determine the extend of the land need to be acquired and their total area.</p>
@@ -659,8 +680,12 @@ $ geometry                       &lt;POINT [m]&gt; POINT (41972.5 36390.05), POI
 <pre><code>1774367 [m^2]</code></pre>
 </div>
 </div>
-<p>###Point-in-polygon count</p>
-<p>####What is Point-in-polygon count</p>
+</section>
+</section>
+<section id="point-in-polygon-count" class="level3">
+<h3 class="anchored" data-anchor-id="point-in-polygon-count">Point-in-polygon count</h3>
+<section id="what-is-point-in-polygon-count" class="level4">
+<h4 class="anchored" data-anchor-id="what-is-point-in-polygon-count">What is Point-in-polygon count</h4>
 <p>It refers to counting the number of points in an area (polygon)</p>
 <p>Let’s say, a pre-school service group wants to find out the numbers of pre-schools in each Planning Subzone.</p>
 <p>The code chunk below performs two operations at one go. Firstly, identify pre-schools located inside each Planning Subzone by using st_intersects(). Next, length() of Base R is used to calculate numbers of pre-schools that fall inside each planning subzone.</p>
@@ -738,6 +763,8 @@ Projected CRS: SVY21 / Singapore TM
 </div>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

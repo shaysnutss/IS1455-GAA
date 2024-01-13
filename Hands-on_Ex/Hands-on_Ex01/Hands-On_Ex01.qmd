@@ -125,13 +125,14 @@ Let's execute this command
 
 st_geometry(mpsz)
 ```
+
 This commands tells you a few things:
 
-1. The types of shapes you're dealing with. Multipolygon means its an area with multiple connected lines.
+1.  The types of shapes you're dealing with. Multipolygon means its an area with multiple connected lines.
 
-2. The bounding box/ range of coordinates that coer the same
+2.  The bounding box/ range of coordinates that coer the same
 
-3. Also the first 5 shapes in the column of the data frame
+3.  Also the first 5 shapes in the column of the data frame
 
 ### glimpse
 
@@ -147,11 +148,11 @@ This command gives you a glimpse into the dataset.
 
 it tells you the following things:
 
-1. the number of rows
-2. the number of columns
-3. what columns are there
-4. data type of each column
-4. first few values of each column
+1.  the number of rows
+2.  the number of columns
+3.  what columns are there
+4.  data type of each column
+5.  first few values of each column
 
 ### head()
 
@@ -164,8 +165,6 @@ head(mpsz, n=5)
 ```
 
 This provides you with complete information (columns and the number of values u want).
-
-
 
 ## Plotting Data
 
@@ -199,13 +198,11 @@ plot(mpsz["PLN_AREA_N"])
 
 There are multiple ways you can study geography. You can study it if it were on a flat piece of paper or curved 3d way on your laptop screen.
 
-When there are two different ways of expressing geography, the way the data is, is differnet. If you want to use two sets of geospatial data, you want to ensure the data has the same projection, i.e. represents locations on the earth's surface the same way. 
-Hence, you will have to translate one of the maps to the same  projection of another.
-
+When there are two different ways of expressing geography, the way the data is, is differnet. If you want to use two sets of geospatial data, you want to ensure the data has the same projection, i.e. represents locations on the earth's surface the same way. Hence, you will have to translate one of the maps to the same projection of another.
 
 ### Working with projection
 
-One of the common issues that can happen is that the coordinate system of a geospatial data is mising or incorrect. To check and input the correct coordinate system, we execute the following command to check the coordinate reference system. 
+One of the common issues that can happen is that the coordinate system of a geospatial data is mising or incorrect. To check and input the correct coordinate system, we execute the following command to check the coordinate reference system.
 
 ```{r}
 
@@ -228,11 +225,12 @@ Now let's double check if the ESPG code is correct
 st_crs(mpsz3414)
 
 ```
+
 ### Working with projection
 
 Sometimes we change projection of a geospatial data to one that is congrunet with the type of analysis we are making.
 
-For example, geographic coordinate system may not be appropriate if the analysis needs to use distance or/and area measurements. 
+For example, geographic coordinate system may not be appropriate if the analysis needs to use distance or/and area measurements.
 
 let's do some transformation here.
 
@@ -247,22 +245,23 @@ preschool3414 <- st_transform(preschool,
 
 ### What is aspatial data?
 
-Let's back track. Spatial data refers to physical location, shapes and positions of the objects on the earth's surface. 
+Let's back track. Spatial data refers to physical location, shapes and positions of the objects on the earth's surface.
 
-Aspatial data refers to characteristics or properties of those objects. Airbnb is asptial data, so it focuses on what kind of house is it, how many bed rooms how many bathrooms, maybe its rental per night. 
+Aspatial data refers to characteristics or properties of those objects. Airbnb is asptial data, so it focuses on what kind of house is it, how many bed rooms how many bathrooms, maybe its rental per night.
 
 ### Import spatial data
 
 ```{r}
 listings <- read_csv("data/aspatial/listings.csv")
 ```
-Let's explore the data.
 
+Let's explore the data.
 
 ```{r}
 list(listings) 
 
 ```
+
 ###Creating a simple feature data frame from an aspatial data frame
 
 Let's do some conversion : transform one coordinate system to another.
@@ -280,11 +279,9 @@ listings_sf <- st_as_sf(listings,
 
 Things to learn from the arguments above:
 
-1. coords argument requires you to provide the column name of the x-coordinates first then followed by the column name of the y-coordinates.
-2. crs argument requires you to provide the coordinates system in epsg format. EPSG: 4326 is wgs84 Geographic Coordinate System and EPSG: 3414 is Singapore SVY21 Projected Coordinate System. You can search for other country’s epsg code by referring to epsg.io.
-3. %>% is used to nest st_transform() to transform the newly created simple feature data frame into svy21 projected coordinates system.
-
-
+1.  coords argument requires you to provide the column name of the x-coordinates first then followed by the column name of the y-coordinates.
+2.  crs argument requires you to provide the coordinates system in epsg format. EPSG: 4326 is wgs84 Geographic Coordinate System and EPSG: 3414 is Singapore SVY21 Projected Coordinate System. You can search for other country’s epsg code by referring to epsg.io.
+3.  %\>% is used to nest st_transform() to transform the newly created simple feature data frame into svy21 projected coordinates system.
 
 ```{r}
 
@@ -294,20 +291,17 @@ glimpse(listings_sf)
 
 Table above shows the content of listing_sf. Notice that a new column called geometry has been added into the data frame. On the other hand, the longitude and latitude columns have been dropped from the data frame.
 
-
-
 ## Geoprocessing with sf package
 
 Here, we will be learning about buffering and point in polygon.
 
-###Buffering
+### Buffering
 
-####What is bufferring
+#### What is bufferring
 
-Let's say there is a point of interest like a cycling path You want to analyse a certain amount of area around it, and the amount would be the buffer. Let's say buffer is 5, you would want to study the area in a 5 mile radius around it. 
+Let's say there is a point of interest like a cycling path You want to analyse a certain amount of area around it, and the amount would be the buffer. Let's say buffer is 5, you would want to study the area in a 5 mile radius around it.
 
-
-Let's have another working scenario: 
+Let's have another working scenario:
 
 The authority is planning to upgrade the exiting cycling path. To do so, they need to acquire 5 metres of reserved land on the both sides of the current cycling path. You are tasked to determine the extend of the land need to be acquired and their total area.
 
@@ -332,16 +326,16 @@ Now the summation of the buffer land and the exisiting cycling path- total land 
 sum(buffer_cycling$AREA)
 
 ```
-###Point-in-polygon count
 
-####What is Point-in-polygon count
+### Point-in-polygon count
+
+#### What is Point-in-polygon count
 
 It refers to counting the number of points in an area (polygon)
 
 Let's say, a pre-school service group wants to find out the numbers of pre-schools in each Planning Subzone.
 
 The code chunk below performs two operations at one go. Firstly, identify pre-schools located inside each Planning Subzone by using st_intersects(). Next, length() of Base R is used to calculate numbers of pre-schools that fall inside each planning subzone.
-
 
 ```{r}
 mpsz3414$`PreSch Count`<- lengths(st_intersects(mpsz3414, preschool3414))
@@ -354,9 +348,11 @@ summary(mpsz3414$`PreSch Count`)
 ```
 
 Zone with most preschools
+
 ```{r}
 top_n(mpsz3414, 1, `PreSch Count`)
 ```
+
 Calculate density of presch
 
 ```{r}
@@ -368,7 +364,6 @@ mpsz3414 <- mpsz3414 %>%
 
 ```
 
-
 ##Exploratory Data Analysis (EDA)
 
 Let's visualize our data to get a better idea of it.
@@ -377,7 +372,6 @@ Let's visualize our data to get a better idea of it.
 hist(mpsz3414$`PreSch Density`)
 
 ```
-
 
 ```{r}
 ggplot(data=mpsz3414, 
@@ -391,7 +385,6 @@ ggplot(data=mpsz3414,
       y = "Frequency")
 
 ```
-
 
 ```{r}
 ggplot(data=mpsz3414, 
