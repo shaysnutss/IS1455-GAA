@@ -1,0 +1,7 @@
+---
+title: "In-class exercise 2 : R for geospatial data science"
+
+execute: 
+  warning: false
+date: "`r Sys.Date()`"
+---

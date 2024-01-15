@@ -5,4 +5,3 @@ title: "IS1455-GAA"
 Welcome to **IS415 Geospatial Analytics and Applications**.
 
 This is the course website of the IS415 mod that I am embarking on this semester. You will find my course materials here. Have fun:)
-
