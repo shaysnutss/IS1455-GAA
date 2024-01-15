@@ -181,7 +181,7 @@ mutate(`DEPENDENCY` = (`YOUNG` + `AGED`)
        `TOTAL`, `DEPENDENCY`)
 ```
 
-##### [Code walkthrough]{.underline}  
+##### [Code walkthrough]{.underline}
 
 -   `filter(Time == 2020) %>%`
 

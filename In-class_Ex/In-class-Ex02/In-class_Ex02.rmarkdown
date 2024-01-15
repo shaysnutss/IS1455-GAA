@@ -1,0 +1,101 @@
+---
+title: "In-class exercise 2 : R for geospatial data science"
+
+execute: 
+  warning: false
+date: "`r Sys.Date()`"
+---
+
+
+Hey friends! Let's learn about a few package:
+
+1.  arrow
+2.  lubridate
+3.  tidyverse
+4.  tmap
+5.  sf
+
+#### What does lubridate do?
+
+Helps me lubricate data and handle datte and time. It is part of tidyverse but later part of it, so it has to be installed separately.
+
+#### What does arrow do?
+
+It helps you efficiently interchange data between programming languages.
+
+## Loading packages
+
+This is a very important step as we have to load the packages before we can use them.
+
+
+```{r}
+pacman::p_load(sf, tmap, tidyverse,lubridate,arrow)
+```
+
+
+## Importing the data
+
+### Importing Geospatial Data into R
+
+As learnt in the previous page, we use `st_read()` function of the sf package to read in the data.
+
+
+```{r}
+
+df <- read_parquet("../../data/GrabPosisi/part-00000-8bbff892-97d2-4011-9961-703e38972569.c000.snappy.parquet")
+```
+
+
+### Conversion of data type
+
+Here we convert the int data type to date time data type. We are not using mutate, as we are over writing the data field in the file.
+
+
+```{r}
+df$pingtimestamp <-as_datetime(df$pingtimestamp)
+```
+
+```{r}
+# get origin
+origin_df <- df %>% #use df
+  group_by(trj_id) %>% #group according to trj_id
+  arrange(pingtimestamp) %>% #sort according to timestamp asc (default)
+  filter(row_number()==1) %>% #the first coordinate for every trip should be the origin
+  mutate(weekday = wday(pingtimestamp, label=TRUE, abbr=TRUE),
+         start_hr = factor(hour(pingtimestamp)),
+         day = factor(mday(pingtimestamp)))
+
+
+```
+
+
+each trip will have multiple rows because every minute the new location one be sent to the server . so when we arrange it, the first row is the origin location.
+
+
+```{r}
+# get end
+destination_df <- df %>% #use df
+  group_by(trj_id) %>% #group according to trj_id
+  arrange(desc(pingtimestamp)) %>% #sort according to timestamp asc (default)
+  filter(row_number()==1) %>% #the first coordinate for every trip should be the origin
+  mutate(weekday = wday(pingtimestamp, label=TRUE, abbr=TRUE),
+         end_hr = factor(hour(pingtimestamp)),
+         day = factor(mday(pingtimestamp)))
+```
+
+```{r}
+# he writes in rds if he still wants to write in r
+write_rds(origin_df, "../../data/rds/origin_df.rds")
+write_rds(destination_df,
+          "../../data/rds/destination_df.rds")
+```
+
+
+#import data
+
+
+```{r}
+origin_df <- read_rds("../../data/rds/origin_df.rds")
+destination_df <- read_rds("../../data/rds/destination_df.rds")
+```
+
