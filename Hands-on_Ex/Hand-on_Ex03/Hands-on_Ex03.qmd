@@ -133,10 +133,6 @@ tm_shape(mpsz_sf) +
 ```
 
 
-```{r}
-tmap_mode('view')
-tm_shape(childcare_sf)+
-  tm_dots()
-```
+
 
 
