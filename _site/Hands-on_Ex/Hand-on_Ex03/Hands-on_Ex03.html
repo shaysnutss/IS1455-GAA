@@ -6,9 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-01-20">
 
-<title>IS415-GAA - Hands-On exercise 3 : 1st Order Spatial Point Patterns Analysis Methods</title>
+<title>IS415-GAA – hands-on_ex03</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -181,34 +180,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#importing-the-spatial-data" id="toc-importing-the-spatial-data" class="nav-link" data-scroll-target="#importing-the-spatial-data">Importing the spatial data</a></li>
   <li><a href="#mapping-the-geospatial-data-sets" id="toc-mapping-the-geospatial-data-sets" class="nav-link" data-scroll-target="#mapping-the-geospatial-data-sets">Mapping the Geospatial data sets</a></li>
   </ul></li>
+  <li><a href="#geospatial-data-wrangling" id="toc-geospatial-data-wrangling" class="nav-link" data-scroll-target="#geospatial-data-wrangling">Geospatial Data Wrangling</a>
+  <ul class="collapse">
+  <li><a href="#converting-sf-data-frames-to-sps-spatial-class" id="toc-converting-sf-data-frames-to-sps-spatial-class" class="nav-link" data-scroll-target="#converting-sf-data-frames-to-sps-spatial-class"><strong>Converting sf data frames to sp’s Spatial* class</strong></a></li>
+  <li><a href="#converting-the-spatial-class-into-generic-sp-format" id="toc-converting-the-spatial-class-into-generic-sp-format" class="nav-link" data-scroll-target="#converting-the-spatial-class-into-generic-sp-format"><strong>Converting the Spatial* class into generic sp format</strong></a></li>
+  <li><a href="#converting-the-generic-sp-format-into-spatstats-ppp-format" id="toc-converting-the-generic-sp-format-into-spatstats-ppp-format" class="nav-link" data-scroll-target="#converting-the-generic-sp-format-into-spatstats-ppp-format"><strong>Converting the generic sp format into spatstat’s ppp format</strong></a></li>
+  <li><a href="#handling-duplicated-points" id="toc-handling-duplicated-points" class="nav-link" data-scroll-target="#handling-duplicated-points"><strong>Handling duplicated points</strong></a></li>
+  <li><a href="#creating-owin-object" id="toc-creating-owin-object" class="nav-link" data-scroll-target="#creating-owin-object"><strong>Creating <em>owin</em> object</strong></a></li>
+  <li><a href="#combining-point-events-object-and-owin-object" id="toc-combining-point-events-object-and-owin-object" class="nav-link" data-scroll-target="#combining-point-events-object-and-owin-object"><strong>Combining point events object and owin object</strong></a></li>
+  </ul></li>
+  <li><a href="#first-order-spatial-point-patterns-analysis" id="toc-first-order-spatial-point-patterns-analysis" class="nav-link" data-scroll-target="#first-order-spatial-point-patterns-analysis"><strong>First-order Spatial Point Patterns Analysis</strong></a>
+  <ul class="collapse">
+  <li><a href="#kernel-density-estimation" id="toc-kernel-density-estimation" class="nav-link" data-scroll-target="#kernel-density-estimation"><strong>Kernel Density Estimation</strong></a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Hands-On exercise 3 : 1st Order Spatial Point Patterns Analysis Methods</h1>
-</div>
 
-
-
-<div class="quarto-title-meta">
-
-    
-    <div>
-    <div class="quarto-title-meta-heading">Published</div>
-    <div class="quarto-title-meta-contents">
-      <p class="date">January 20, 2024</p>
-    </div>
-  </div>
-  
-    
-  </div>
-  
-
-</header>
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
@@ -239,6 +230,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>If you aren’t able to install maptools, do this:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"maptools"</span>, <span class="at">repos=</span><span class="st">"http://R-Forge.R-project.org"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'maptools' is in use and will not be installed</code></pre>
+</div>
 </div>
 </section>
 <section id="spatial-data-wrangling" class="level2">
@@ -248,7 +242,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>We will use the st_read() function of sf package to import geospatial datasets into R.</p>
 <p>Let’s import the first one of ChildCareServices:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>childcare_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/ChildCareServices.geojson"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>childcare_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/ChildCareServices.geojson"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `ChildCareServices' from data source 
   `C:\shaysnutss\IS1455-GAA\Hands-on_Ex\Hand-on_Ex03\data\ChildCareServices.geojson' 
@@ -263,11 +257,11 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 <p>We can see that the CRS is not what we want let’s transform it to SVY21</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>childcare_sf <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(childcare_sf, <span class="at">crs =</span> <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>childcare_sf <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(childcare_sf, <span class="at">crs =</span> <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s print out childcare_sf to see what is the CRS.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_geometry</span>(childcare_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_geometry</span>(childcare_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Geometry set for 1925 features 
 Geometry type: POINT
@@ -277,10 +271,25 @@ z_range:       zmin: 0 zmax: 0
 Projected CRS: SVY21 / Singapore TM
 First 5 geometries:</code></pre>
 </div>
+<div class="cell-output cell-output-stderr">
+<pre><code>POINT Z (40985.94 33848.38 0)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>POINT Z (28308.65 45530.47 0)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>POINT Z (17828.84 36607.36 0)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>POINT Z (25579.73 29221.89 0)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>POINT Z (38981.02 32483.41 0)</code></pre>
+</div>
 </div>
 <p>Let’s import coastal outline.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>sg_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>, <span class="at">layer=</span><span class="st">"CostalOutline"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>sg_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>, <span class="at">layer=</span><span class="st">"CostalOutline"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `CostalOutline' from data source 
   `C:\shaysnutss\IS1455-GAA\Hands-on_Ex\Hand-on_Ex03\data\geospatial' 
@@ -294,7 +303,7 @@ Projected CRS: SVY21</code></pre>
 </div>
 <p>When we look at the coordinate reference system of coastal outline, we see that the user input is SVY21 but the correct EPSG code is 9001 instead of 3414.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(sg_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(sg_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Coordinate Reference System:
   User input: SVY21 
@@ -339,11 +348,15 @@ PROJCRS["SVY21",
 <p>So here we change it to 3414.</p>
 <p>Reminder we don’t use st_transform() because the CRS is already SVY21, it’s just the ESPG code that is wrong!</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>sg_sf <span class="ot">&lt;-</span> <span class="fu">st_set_crs</span>(sg_sf, <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>sg_sf <span class="ot">&lt;-</span> <span class="fu">st_set_crs</span>(sg_sf, <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: st_crs&lt;- : replacing crs does not reproject data; use st_transform for
+that</code></pre>
+</div>
 </div>
 <p>Now let’s recheck if the coordiante system and ESPG code match.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(sg_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(sg_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Coordinate Reference System:
   User input: EPSG:3414 
@@ -390,8 +403,8 @@ PROJCRS["SVY21 / Singapore TM",
 </div>
 <p>Now let’s import MP_14_SUBZONE_WEB_PL.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>mpsz_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>, </span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">layer =</span> <span class="st">"MP14_SUBZONE_WEB_PL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>mpsz_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>, </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">layer =</span> <span class="st">"MP14_SUBZONE_WEB_PL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `MP14_SUBZONE_WEB_PL' from data source 
   `C:\shaysnutss\IS1455-GAA\Hands-on_Ex\Hand-on_Ex03\data\geospatial' 
@@ -405,7 +418,7 @@ Projected CRS: SVY21</code></pre>
 </div>
 <p>Let’s check the coordinate system, it has to be SVY21 so that it is projected coordinate system, and the ESPG code has to match the SVY21.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(mpsz_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(mpsz_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Coordinate Reference System:
   User input: SVY21 
@@ -449,11 +462,15 @@ PROJCRS["SVY21",
 </div>
 <p>Since it’s 9001 and not 3414, let’s change the code.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>mpsz_sf <span class="ot">&lt;-</span> <span class="fu">st_set_crs</span>(mpsz_sf, <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>mpsz_sf <span class="ot">&lt;-</span> <span class="fu">st_set_crs</span>(mpsz_sf, <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: st_crs&lt;- : replacing crs does not reproject data; use st_transform for
+that</code></pre>
+</div>
 </div>
 <p>Let’s check.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(mpsz_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(mpsz_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Coordinate Reference System:
   User input: EPSG:3414 
@@ -502,22 +519,263 @@ PROJCRS["SVY21 / Singapore TM",
 <section id="mapping-the-geospatial-data-sets" class="level3">
 <h3 class="anchored" data-anchor-id="mapping-the-geospatial-data-sets">Mapping the Geospatial data sets</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>col_names <span class="ot">&lt;-</span> <span class="fu">names</span>(childcare_sf)</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(col_names)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>col_names <span class="ot">&lt;-</span> <span class="fu">names</span>(childcare_sf)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(col_names)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "Name"        "Description" "geometry"   </code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">"plot"</span>)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(mpsz_sf) <span class="sc">+</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(childcare_sf) <span class="sc">+</span>  </span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">"plot"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>tmap mode set to plotting</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(mpsz_sf) <span class="sc">+</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(childcare_sf) <span class="sc">+</span>  </span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="Hands-on_Ex03_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+</section>
+</section>
+<section id="geospatial-data-wrangling" class="level2">
+<h2 class="anchored" data-anchor-id="geospatial-data-wrangling">Geospatial Data Wrangling</h2>
+<p>Although simple feature data frame is gaining popularity again sp’s Spatial* classes, there are, however, many geospatial analysis packages require the input geospatial data in sp’s Spatial* classes. In this section, you will learn how to convert simple feature data frame to sp’s Spatial* class.</p>
+<section id="converting-sf-data-frames-to-sps-spatial-class" class="level3">
+<h3 class="anchored" data-anchor-id="converting-sf-data-frames-to-sps-spatial-class"><strong>Converting sf data frames to sp’s Spatial* class</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>childcare <span class="ot">&lt;-</span> <span class="fu">as_Spatial</span>(childcare_sf)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>mpsz <span class="ot">&lt;-</span> <span class="fu">as_Spatial</span>(mpsz_sf)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>sg <span class="ot">&lt;-</span> <span class="fu">as_Spatial</span>(sg_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">#print(as.data.frame(childcare))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co">#childcare</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co">#mpsz</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co">#sg</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="converting-the-spatial-class-into-generic-sp-format" class="level3">
+<h3 class="anchored" data-anchor-id="converting-the-spatial-class-into-generic-sp-format"><strong>Converting the Spatial* class into generic sp format</strong></h3>
+<p><strong>spatstat</strong>&nbsp;requires the analytical data in&nbsp;<strong><em>ppp</em></strong>&nbsp;object form. There is no direct way to convert a Spatial* classes into&nbsp;<strong><em>ppp</em></strong>&nbsp;object.&nbsp;</p>
+<p>Spatial* classes -&gt; Spatial -&gt; ppp</p>
+<p>Let’s do spatial* classes -&gt; spatial first</p>
+<p>Remeber to use the correct type of shape</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>childcare_sp <span class="ot">&lt;-</span> <span class="fu">as</span>(childcare, <span class="st">"SpatialPoints"</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>sg_sp <span class="ot">&lt;-</span> <span class="fu">as</span>(sg, <span class="st">"SpatialPolygons"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>What are the differences between Spatial* classes and generic sp object?</strong></p>
+<p>In summary, you would use Spatial* classes when you have simple spatial data without additional attributes, and you want a straightforward representation of points, lines, or polygons. On the other hand, if your spatial data includes associated attributes and you need to perform in-depth analysis, you would use generic sp objects like SpatialPointsDataFrame or SpatialPolygonsDataFrame.</p>
+<p>For example, if you only need to plot the locations of childcare centers on a map, you can use the SpatialPoints class. However, if you want to perform statistical analysis on the childcare data, including attributes such as capacity or age group, you would convert it into a SpatialPointsDataFrame, which allows you to work with both spatial and attribute data seamlessly.</p>
+</section>
+<section id="converting-the-generic-sp-format-into-spatstats-ppp-format" class="level3">
+<h3 class="anchored" data-anchor-id="converting-the-generic-sp-format-into-spatstats-ppp-format"><strong>Converting the generic sp format into spatstat’s ppp format</strong></h3>
+<p>sp -&gt; ppp. And now you can put it into spatstat.</p>
+<p>Now, we will use&nbsp;<em>as.ppp()</em>&nbsp;function of&nbsp;<strong>spatstat</strong>&nbsp;to convert the spatial data into&nbsp;<strong>spatstat</strong>’s&nbsp;<strong><em>ppp</em></strong>&nbsp;object format.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>childcare_ppp <span class="ot">&lt;-</span> <span class="fu">as</span>(childcare_sp, <span class="st">"ppp"</span>)</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>childcare_ppp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Planar point pattern: 1925 points
+window: rectangle = [11810.03, 45404.24] x [25596.33, 49300.88] units</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(childcare_ppp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Hands-on_Ex03_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p><strong>what’s the difference between plotting a geojson with spatial points and plotting the same data thats converted to ppp format</strong></p>
+<p>Plotting a GeoJSON file with spatial points typically results in a standard spatial point map. Each point is displayed as a symbol or marker on the map, and you can customize the appearance of the points, such as color, size, and shape.</p>
+<p>Converting data to <strong><code>ppp</code></strong> format is typically done when you intend to perform spatial point process analysis. In this context, a point pattern represents the locations of events or objects of interest (e.g., tree locations, disease cases). <strong><code>ppp</code></strong> objects are used in the <strong><code>spatstat</code></strong> package for advanced spatial point pattern analysis. This includes tasks like assessing spatial clustering, estimating intensity, performing K-functions analysis, and simulating point patterns under different models.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(childcare_ppp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Planar point pattern:  1925 points
+Average intensity 2.417323e-06 points per square unit
+
+*Pattern contains duplicated points*
+
+Coordinates are given to 3 decimal places
+i.e. rounded to the nearest multiple of 0.001 units
+
+Window: rectangle = [11810.03, 45404.24] x [25596.33, 49300.88] units
+                    (33590 x 23700 units)
+Window area = 796335000 square units</code></pre>
+</div>
+</div>
+</section>
+<section id="handling-duplicated-points" class="level3">
+<h3 class="anchored" data-anchor-id="handling-duplicated-points"><strong>Handling duplicated points</strong></h3>
+<p>Duplicates, in this context, are multiple points that occupy exactly the same location in space.</p>
+<p>Coincident points are points that are so close to each other that they are considered to occupy the same location within a certain tolerance threshold.</p>
+<p>These duplicates or coincident points can occur for various reasons, such as measurement errors, data collection methods, or the nature of the phenomenon being studied.</p>
+<p>Let’s check if there are any duplicates in the data:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">any</span>(<span class="fu">duplicated</span>(childcare_ppp))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<p>The <strong><code>multiplicity()</code></strong> function is a function or method typically provided by spatial point pattern analysis software or packages like <strong><code>spatstat</code></strong>. Its purpose is to calculate the multiplicity of points in a point pattern. Multiplicity refers to the number of points that occupy the same location (coincident points) at each location where such coincidences occur.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Count the number of coincident</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="co">#points in the childcare_ppp point pattern</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="fu">multiplicity</span>(childcare_ppp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">'plot'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>tmap mode set to plotting</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(childcare) <span class="sc">+</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>(<span class="at">alpha=</span><span class="fl">0.4</span>, </span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">size=</span><span class="fl">0.05</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Hands-on_Ex03_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>There are three different approaches to address the issue of duplicate points in spatial point pattern analysis:</p>
+<ol type="1">
+<li><p><strong>Deleting Duplicates</strong>: This is the simplest approach, where you remove the duplicate points from your dataset. However, this method comes with a drawback, as it may result in the loss of valuable point events. If each point represents a meaningful observation, deleting duplicates can lead to the omission of important data.</p></li>
+<li><p><strong>Jittering</strong>: The second solution involves adding a small random perturbation to the duplicate points. This perturbation is often referred to as “jitter,” and it introduces a slight variation in the spatial locations of duplicate points, ensuring that they do not occupy the exact same space. Jittering is a way to retain all points while avoiding the issue of perfect overlap.</p></li>
+<li><p><strong>Attaching Duplicates as Marks</strong>: The third solution is to treat each point as “unique” and then attach the duplicates of the points as marks or attributes of the points. In this approach, duplicate points are not removed or perturbed; instead, they are associated with additional information or attributes. This allows you to preserve all observations while acknowledging their duplications. Analytical techniques that consider these marks can be applied to study the spatial pattern or relationships among points.</p></li>
+</ol>
+<section id="jittering" class="level4">
+<h4 class="anchored" data-anchor-id="jittering">Jittering</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>childcare_ppp_jit <span class="ot">&lt;-</span> <span class="fu">rjitter</span>(childcare_ppp, </span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">retry=</span><span class="cn">TRUE</span>, </span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">nsim=</span><span class="dv">1</span>, </span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">drop=</span><span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s check if there are any duplicate points</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">any</span>(<span class="fu">duplicated</span>(childcare_ppp_jit))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="creating-owin-object" class="level3">
+<h3 class="anchored" data-anchor-id="creating-owin-object"><strong>Creating <em>owin</em> object</strong></h3>
+<p>The owin object is essentially a spatial window that limits the analysis to a specific polygonal region. It provides a framework for handling point patterns within this spatial window. This is particularly important when you want to account for the geographic boundaries of the study area in your analysis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># this is from generic spatia lclass to owin</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>sg_owin <span class="ot">&lt;-</span> <span class="fu">as</span>(sg_sp, <span class="st">"owin"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(sg_owin)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Hands-on_Ex03_files/figure-html/unnamed-chunk-31-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(sg_owin)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Window: polygonal boundary
+60 separate polygons (no holes)
+            vertices        area relative.area
+polygon 1         38 1.56140e+04      2.09e-05
+polygon 2        735 4.69093e+06      6.27e-03
+polygon 3         49 1.66986e+04      2.23e-05
+polygon 4         76 3.12332e+05      4.17e-04
+polygon 5       5141 6.36179e+08      8.50e-01
+polygon 6         42 5.58317e+04      7.46e-05
+polygon 7         67 1.31354e+06      1.75e-03
+polygon 8         15 4.46420e+03      5.96e-06
+polygon 9         14 5.46674e+03      7.30e-06
+polygon 10        37 5.26194e+03      7.03e-06
+polygon 11        53 3.44003e+04      4.59e-05
+polygon 12        74 5.82234e+04      7.78e-05
+polygon 13        69 5.63134e+04      7.52e-05
+polygon 14       143 1.45139e+05      1.94e-04
+polygon 15       165 3.38736e+05      4.52e-04
+polygon 16       130 9.40465e+04      1.26e-04
+polygon 17        19 1.80977e+03      2.42e-06
+polygon 18        16 2.01046e+03      2.69e-06
+polygon 19        93 4.30642e+05      5.75e-04
+polygon 20        90 4.15092e+05      5.54e-04
+polygon 21       721 1.92795e+06      2.57e-03
+polygon 22       330 1.11896e+06      1.49e-03
+polygon 23       115 9.28394e+05      1.24e-03
+polygon 24        37 1.01705e+04      1.36e-05
+polygon 25        25 1.66227e+04      2.22e-05
+polygon 26        10 2.14507e+03      2.86e-06
+polygon 27       190 2.02489e+05      2.70e-04
+polygon 28       175 9.25904e+05      1.24e-03
+polygon 29      1993 9.99217e+06      1.33e-02
+polygon 30        38 2.42492e+04      3.24e-05
+polygon 31        24 6.35239e+03      8.48e-06
+polygon 32        53 6.35791e+05      8.49e-04
+polygon 33        41 1.60161e+04      2.14e-05
+polygon 34        22 2.54368e+03      3.40e-06
+polygon 35        30 1.08382e+04      1.45e-05
+polygon 36       327 2.16921e+06      2.90e-03
+polygon 37       111 6.62927e+05      8.85e-04
+polygon 38        90 1.15991e+05      1.55e-04
+polygon 39        98 6.26829e+04      8.37e-05
+polygon 40       415 3.25384e+06      4.35e-03
+polygon 41       222 1.51142e+06      2.02e-03
+polygon 42       107 6.33039e+05      8.45e-04
+polygon 43         7 2.48299e+03      3.32e-06
+polygon 44        17 3.28303e+04      4.38e-05
+polygon 45        26 8.34758e+03      1.11e-05
+polygon 46       177 4.67446e+05      6.24e-04
+polygon 47        16 3.19460e+03      4.27e-06
+polygon 48        15 4.87296e+03      6.51e-06
+polygon 49        66 1.61841e+04      2.16e-05
+polygon 50       149 5.63430e+06      7.53e-03
+polygon 51       609 2.62570e+07      3.51e-02
+polygon 52         8 7.82256e+03      1.04e-05
+polygon 53       976 2.33447e+07      3.12e-02
+polygon 54        55 8.25379e+04      1.10e-04
+polygon 55       976 2.33447e+07      3.12e-02
+polygon 56        61 3.33449e+05      4.45e-04
+polygon 57         6 1.68410e+04      2.25e-05
+polygon 58         4 9.45963e+03      1.26e-05
+polygon 59        46 6.99702e+05      9.35e-04
+polygon 60        13 7.00873e+04      9.36e-05
+enclosing rectangle: [2663.93, 56047.79] x [16357.98, 50244.03] units
+                     (53380 x 33890 units)
+Window area = 748741000 square units
+Fraction of frame area: 0.414</code></pre>
+</div>
+</div>
+</section>
+<section id="combining-point-events-object-and-owin-object" class="level3">
+<h3 class="anchored" data-anchor-id="combining-point-events-object-and-owin-object"><strong>Combining point events object and owin object</strong></h3>
+<p>In this last step of geospatial data wrangling, we will extract childcare events that are located within Singapore by using the code chunk below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>childcareSG_ppp <span class="ot">=</span> childcare_ppp[sg_owin]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(childcareSG_ppp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Hands-on_Ex03_files/figure-html/unnamed-chunk-34-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="first-order-spatial-point-patterns-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="first-order-spatial-point-patterns-analysis"><strong>First-order Spatial Point Patterns Analysis</strong></h2>
+<ul>
+<li><p>deriving&nbsp;<strong>kernel density estimation (KDE)</strong>&nbsp;layer for visualising and exploring the intensity of point processes</p></li>
+<li><p>performing&nbsp;<strong>Confirmatory Spatial Point Patterns Analysis</strong>&nbsp;by using&nbsp;<strong>Nearest Neighbour</strong>&nbsp;statistics</p></li>
+</ul>
+<section id="kernel-density-estimation" class="level3">
+<h3 class="anchored" data-anchor-id="kernel-density-estimation"><strong>Kernel Density Estimation</strong></h3>
 
 
 </section>
