@@ -15,6 +15,8 @@ It helps us answer tje following questions:
 1.  are the childcare centres in Singapore randomly distributed throughout the country?
 2.  if the answer is not, then the next logical question is where are the locations with higher concentration of childcare centres?
 
+## 
+
 ## Data
 
 1.  childcare
@@ -36,6 +38,7 @@ install.packages("maptools", repos="http://R-Forge.R-project.org")
 
 
 ```
+
 
 ## Spatial Data Wrangling
 
@@ -83,6 +86,7 @@ Reminder we don't use st_transform() because the CRS is already SVY21, it's just
 sg_sf <- st_set_crs(sg_sf, 3414)
 ```
 
+
 Now let's recheck if the coordiante system and ESPG code match.
 
 ```{r}
@@ -115,9 +119,6 @@ st_crs(mpsz_sf)
 ```
 
 ### Mapping the Geospatial data sets
-
-Let's quickly plot a choropleth map to visualise the spatial data
-
 ```{r}
 col_names <- names(childcare_sf)
 print(col_names)
@@ -131,178 +132,11 @@ tm_shape(mpsz_sf) +
   tm_dots()
 ```
 
+
 ```{r}
 tmap_mode('view')
 tm_shape(childcare_sf)+
   tm_dots()
 ```
 
-## Geospatial Data Wrangling
 
-Although simple feature data frame is gaining popularity again sp’s Spatial\* classes, there are, however, many geospatial analysis packages require the input geospatial data in sp’s Spatial\* classes. In this section, you will learn how to convert simple feature data frame to sp’s Spatial\* class.
-
-### **Converting sf data frames to sp’s Spatial\* class**
-
-```{r}
-childcare <- as_Spatial(childcare_sf)
-mpsz <- as_Spatial(mpsz_sf)
-sg <- as_Spatial(sg_sf)
-```
-
-```{r}
-print(as.data.frame(childcare))
-```
-
-```{r}
-childcare
-```
-
-```{r}
-mpsz
-```
-
-```{r}
-sg
-```
-
-### **Converting the Spatial\* class into generic sp format**
-
-**spatstat** requires the analytical data in ***ppp*** object form. There is no direct way to convert a Spatial\* classes into ***ppp*** object. 
-
-Spatial\* classes -\> Spatial -\> ppp
-
-Let's do spatial\* classes -\> spatial first
-
-Remeber to use the correct type of shape
-
-```{r}
-childcare_sp <- as(childcare, "SpatialPoints")
-sg_sp <- as(sg, "SpatialPolygons")
-```
-
-**What are the differences between Spatial\* classes and generic sp object?**
-
-In summary, you would use Spatial\* classes when you have simple spatial data without additional attributes, and you want a straightforward representation of points, lines, or polygons. On the other hand, if your spatial data includes associated attributes and you need to perform in-depth analysis, you would use generic sp objects like SpatialPointsDataFrame or SpatialPolygonsDataFrame.
-
-For example, if you only need to plot the locations of childcare centers on a map, you can use the SpatialPoints class. However, if you want to perform statistical analysis on the childcare data, including attributes such as capacity or age group, you would convert it into a SpatialPointsDataFrame, which allows you to work with both spatial and attribute data seamlessly.
-
-### **Converting the generic sp format into spatstat’s ppp format**
-
-sp -\> ppp. And now you can put it into spatstat.
-
-Now, we will use *as.ppp()* function of **spatstat** to convert the spatial data into **spatstat**’s ***ppp*** object format.
-
-```{r}
-childcare_ppp <- as(childcare_sp, "ppp")
-childcare_ppp
-```
-
-```{r}
-plot(childcare_ppp)
-```
-
-**what's the difference between plotting a geojson with spatial points and plotting the same data thats converted to ppp format**
-
-Plotting a GeoJSON file with spatial points typically results in a standard spatial point map. Each point is displayed as a symbol or marker on the map, and you can customize the appearance of the points, such as color, size, and shape.
-
-Converting data to **`ppp`** format is typically done when you intend to perform spatial point process analysis. In this context, a point pattern represents the locations of events or objects of interest (e.g., tree locations, disease cases). **`ppp`** objects are used in the **`spatstat`** package for advanced spatial point pattern analysis. This includes tasks like assessing spatial clustering, estimating intensity, performing K-functions analysis, and simulating point patterns under different models.
-
-```{r}
-summary(childcare_ppp)
-```
-
-### **Handling duplicated points**
-
-Duplicates, in this context, are multiple points that occupy exactly the same location in space.
-
-Coincident points are points that are so close to each other that they are considered to occupy the same location within a certain tolerance threshold.
-
-These duplicates or coincident points can occur for various reasons, such as measurement errors, data collection methods, or the nature of the phenomenon being studied.
-
-Let's check if there are any duplicates in the data:
-
-```{r}
-any(duplicated(childcare_ppp))
-```
-
-The **`multiplicity()`** function is a function or method typically provided by spatial point pattern analysis software or packages like **`spatstat`**. Its purpose is to calculate the multiplicity of points in a point pattern. Multiplicity refers to the number of points that occupy the same location (coincident points) at each location where such coincidences occur.
-
-```{r}
-# Count the number of coincident
-#points in the childcare_ppp point pattern
-multiplicity(childcare_ppp)
-
-```
-
-If we want to know how many locations have more than one point event, we can use the code chunk below.
-
-```{r}
-sum(multiplicity(childcare_ppp) > 1)
-```
-
-```{r}
-tmap_mode('view')
-tm_shape(childcare) +
-  tm_dots(alpha=0.4, 
-          size=0.05)
-```
-
-There are three different approaches to address the issue of duplicate points in spatial point pattern analysis:
-
-1.  **Deleting Duplicates**: This is the simplest approach, where you remove the duplicate points from your dataset. However, this method comes with a drawback, as it may result in the loss of valuable point events. If each point represents a meaningful observation, deleting duplicates can lead to the omission of important data.
-
-2.  **Jittering**: The second solution involves adding a small random perturbation to the duplicate points. This perturbation is often referred to as "jitter," and it introduces a slight variation in the spatial locations of duplicate points, ensuring that they do not occupy the exact same space. Jittering is a way to retain all points while avoiding the issue of perfect overlap.
-
-3.  **Attaching Duplicates as Marks**: The third solution is to treat each point as "unique" and then attach the duplicates of the points as marks or attributes of the points. In this approach, duplicate points are not removed or perturbed; instead, they are associated with additional information or attributes. This allows you to preserve all observations while acknowledging their duplications. Analytical techniques that consider these marks can be applied to study the spatial pattern or relationships among points.
-
-#### Jittering
-
-```{r}
-childcare_ppp_jit <- rjitter(childcare_ppp, 
-                             retry=TRUE, 
-                             nsim=1, 
-                             drop=TRUE)
-```
-
-Let's check if there are any duplicate points
-
-```{r}
-any(duplicated(childcare_ppp_jit))
-```
-
-### **Creating *owin* object**
-
-The owin object is essentially a spatial window that limits the analysis to a specific polygonal region. It provides a framework for handling point patterns within this spatial window. This is particularly important when you want to account for the geographic boundaries of the study area in your analysis.
-
-```{r}
-# this is from generic spatia lclass to owin
-sg_owin <- as(sg_sp, "owin")
-```
-
-```{r}
-plot(sg_owin)
-```
-
-```{r}
-summary(sg_owin)
-```
-
-### **Combining point events object and owin object**
-
-In this last step of geospatial data wrangling, we will extract childcare events that are located within Singapore by using the code chunk below.
-
-```{r}
-childcareSG_ppp = childcare_ppp[sg_owin]
-```
-
-```{r}
-plot(childcareSG_ppp)
-```
-
-## **First-order Spatial Point Patterns Analysis**
-
--   deriving **kernel density estimation (KDE)** layer for visualising and exploring the intensity of point processes
-
--   performing **Confirmatory Spatial Point Patterns Analysis** by using **Nearest Neighbour** statistics
-
-### **Kernel Density Estimation**
