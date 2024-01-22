@@ -11,6 +11,8 @@ date: "`r Sys.Date()`"
 pacman::p_load(maptools, sf,raster,spatstat,tmap,tidyverse)
 ```
 
+Here we use two different types of reading because for childcare we know the exact file but the other file is a shapefile that requires multiple files, so you use the dsn part.
+
 ```{r}
 childcare_sf <- st_read("../../Hands-On_Ex/Hand-on_Ex03/data/ChildCareServices.geojson") %>%
   st_transform(crs=3414)
@@ -30,4 +32,86 @@ sg_sf <- mpsz_sfe %>%
 
 ```{r}
 plot(sg_sf)
+```
+
+## geospatial data wrangling
+
+creating ppp objects : sf method
+
+easier to do this to get from sf -\> ppp, instead of sf -\> sp\* -\> sp general -\> ppp
+
+```{r}
+childcare_ppp <- as.ppp(childcare_sf)
+```
+
+```{r}
+summary(childcare_ppp)
+```
+
+```{r}
+plot(childcare_ppp)
+```
+
+### Handling duplicated points
+
+We can check the duplication in a ppp object by using the code chunk below.
+
+This is very important for postal code data. Postal code covers a large area and muliple data points have the same postal code, so you must check if there are duplicates + use jittering
+
+```{r}
+any(duplicated(childcare_ppp))
+```
+
+### Creating owin object : sf method
+
+This .owin helps with the conversion aagain without you doing sf -\> sp\* -\> sp general -\> owin
+
+```{r}
+# . functions work with sf layer, so take the originl data
+sg_owin <- as.owin(sg_sf)
+```
+
+```{r}
+plot(sg_owin)
+```
+
+```{r}
+summary(sg_owin)
+```
+
+```{r}
+childcareSG_ppp <- childcare_ppp[sg_owin]
+```
+
+```{r}
+pg <- mpsz_sfe %>% 
+  filter(PLN_AREA_N == "PUNGGOL")
+tm <- mpsz_sfe %>% 
+  filter(PLN_AREA_N == "TAMPINES")
+ckk <- mpsz_sfe %>% 
+  filter(PLN_AREA_N == "CHOA CHU KANG")
+jw <- mpsz_sfe %>% 
+  filter(PLN_AREA_N == "JURONG WEST")
+```
+
+Plotting target planning area
+
+```{r}
+
+plot(pg, main ="Punggol")
+
+```
+
+```{r}
+plot(tm, main ="Tampines")
+
+```
+
+```{r}
+plot(ckk, main ="Choa Chu Kang")
+
+```
+
+```{r}
+plot(jw, main ="Jurong West")
 ```

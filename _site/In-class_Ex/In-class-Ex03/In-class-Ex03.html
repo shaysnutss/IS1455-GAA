@@ -145,7 +145,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">In-class Exercise 2</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../In-class_Ex/In-class-Ex03/In-class_Ex03.html" rel="" target="">
+    <a class="dropdown-item" href="../../In-class_Ex/In-class-Ex03/In-class-Ex03.html" rel="" target="">
  <span class="dropdown-text">In-class Exercise 3</span></a>
   </li>  
     </ul>
@@ -177,6 +177,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#creating-coastal-outline" id="toc-creating-coastal-outline" class="nav-link active" data-scroll-target="#creating-coastal-outline">Creating Coastal outline</a></li>
+  <li><a href="#geospatial-data-wrangling" id="toc-geospatial-data-wrangling" class="nav-link" data-scroll-target="#geospatial-data-wrangling">geospatial data wrangling</a>
+  <ul class="collapse">
+  <li><a href="#handling-duplicated-points" id="toc-handling-duplicated-points" class="nav-link" data-scroll-target="#handling-duplicated-points">Handling duplicated points</a></li>
+  <li><a href="#creating-owin-object-sf-method" id="toc-creating-owin-object-sf-method" class="nav-link" data-scroll-target="#creating-owin-object-sf-method">Creating owin object : sf method</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -210,6 +215,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#eval :false</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(maptools, sf,raster,spatstat,tmap,tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Here we use two different types of reading because for childcare we know the exact file but the other file is a shapefile that requires multiple files, so you use the dsn part.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>childcare_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"../../Hands-On_Ex/Hand-on_Ex03/data/ChildCareServices.geojson"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs=</span><span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -250,8 +256,196 @@ Projected CRS: SVY21</code></pre>
 <p><img src="In-class-Ex03_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+</section>
+<section id="geospatial-data-wrangling" class="level2">
+<h2 class="anchored" data-anchor-id="geospatial-data-wrangling">geospatial data wrangling</h2>
+<p>creating ppp objects : sf method</p>
+<p>easier to do this to get from sf -&gt; ppp, instead of sf -&gt; sp* -&gt; sp general -&gt; ppp</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>childcare_ppp <span class="ot">&lt;-</span> <span class="fu">as.ppp</span>(childcare_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(childcare_ppp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Marked planar point pattern:  1925 points
+Average intensity 2.417323e-06 points per square unit
+
+Coordinates are given to 3 decimal places
+i.e. rounded to the nearest multiple of 0.001 units
+
+marks are of type 'character'
+Summary:
+   Length     Class      Mode 
+     1925 character character 
+
+Window: rectangle = [11810.03, 45404.24] x [25596.33, 49300.88] units
+                    (33590 x 23700 units)
+Window area = 796335000 square units</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(childcare_ppp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="In-class-Ex03_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<section id="handling-duplicated-points" class="level3">
+<h3 class="anchored" data-anchor-id="handling-duplicated-points">Handling duplicated points</h3>
+<p>We can check the duplication in a ppp object by using the code chunk below.</p>
+<p>This is very important for postal code data. Postal code covers a large area and muliple data points have the same postal code, so you must check if there are duplicates + use jittering</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">any</span>(<span class="fu">duplicated</span>(childcare_ppp))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+</div>
+</section>
+<section id="creating-owin-object-sf-method" class="level3">
+<h3 class="anchored" data-anchor-id="creating-owin-object-sf-method">Creating owin object : sf method</h3>
+<p>This .owin helps with the conversion aagain without you doing sf -&gt; sp* -&gt; sp general -&gt; owin</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># . functions work with sf layer, so take the originl data</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>sg_owin <span class="ot">&lt;-</span> <span class="fu">as.owin</span>(sg_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(sg_owin)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="In-class-Ex03_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(sg_owin)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Window: polygonal boundary
+80 separate polygons (35 holes)
+                  vertices         area relative.area
+polygon 1            14650  6.97996e+08      8.93e-01
+polygon 2 (hole)         3 -2.21090e+00     -2.83e-09
+polygon 3              285  1.61128e+06      2.06e-03
+polygon 4 (hole)         3 -2.05920e-03     -2.63e-12
+polygon 5 (hole)         3 -8.83647e-03     -1.13e-11
+polygon 6              668  5.40368e+07      6.91e-02
+polygon 7               44  2.26577e+03      2.90e-06
+polygon 8               27  1.50315e+04      1.92e-05
+polygon 9              711  1.28815e+07      1.65e-02
+polygon 10 (hole)       36 -4.01660e+04     -5.14e-05
+polygon 11 (hole)      317 -5.11280e+04     -6.54e-05
+polygon 12 (hole)        3 -3.41405e-01     -4.37e-10
+polygon 13 (hole)        3 -2.89050e-05     -3.70e-14
+polygon 14              77  3.29939e+05      4.22e-04
+polygon 15              30  2.80002e+04      3.58e-05
+polygon 16 (hole)        3 -2.83151e-01     -3.62e-10
+polygon 17              71  8.18750e+03      1.05e-05
+polygon 18 (hole)        3 -1.68316e-04     -2.15e-13
+polygon 19 (hole)       36 -7.79904e+03     -9.97e-06
+polygon 20 (hole)        4 -2.05611e-02     -2.63e-11
+polygon 21 (hole)        3 -2.18000e-06     -2.79e-15
+polygon 22 (hole)        3 -3.65501e-03     -4.67e-12
+polygon 23 (hole)        3 -4.95057e-02     -6.33e-11
+polygon 24 (hole)        3 -3.99521e-02     -5.11e-11
+polygon 25 (hole)        3 -6.62377e-01     -8.47e-10
+polygon 26 (hole)        3 -2.09065e-03     -2.67e-12
+polygon 27              91  1.49663e+04      1.91e-05
+polygon 28 (hole)       26 -1.25665e+03     -1.61e-06
+polygon 29 (hole)      349 -1.21433e+03     -1.55e-06
+polygon 30 (hole)       20 -4.39069e+00     -5.62e-09
+polygon 31 (hole)       48 -1.38338e+02     -1.77e-07
+polygon 32 (hole)       28 -1.99862e+01     -2.56e-08
+polygon 33              40  1.38607e+04      1.77e-05
+polygon 34 (hole)       40 -6.00381e+03     -7.68e-06
+polygon 35 (hole)        7 -1.40545e-01     -1.80e-10
+polygon 36 (hole)       12 -8.36709e+01     -1.07e-07
+polygon 37              45  2.51218e+03      3.21e-06
+polygon 38             142  3.22293e+03      4.12e-06
+polygon 39             148  3.10395e+03      3.97e-06
+polygon 40              75  1.73526e+04      2.22e-05
+polygon 41              83  5.28920e+03      6.76e-06
+polygon 42             211  4.70521e+05      6.02e-04
+polygon 43             106  3.04104e+03      3.89e-06
+polygon 44             266  1.50631e+06      1.93e-03
+polygon 45              71  5.63061e+03      7.20e-06
+polygon 46              10  1.99717e+02      2.55e-07
+polygon 47             478  2.06120e+06      2.64e-03
+polygon 48             155  2.67502e+05      3.42e-04
+polygon 49            1027  1.27782e+06      1.63e-03
+polygon 50 (hole)        3 -1.16959e-03     -1.50e-12
+polygon 51              65  8.42861e+04      1.08e-04
+polygon 52              47  3.82087e+04      4.89e-05
+polygon 53               6  4.50259e+02      5.76e-07
+polygon 54             132  9.53357e+04      1.22e-04
+polygon 55 (hole)        3 -3.23310e-04     -4.13e-13
+polygon 56               4  2.69313e+02      3.44e-07
+polygon 57 (hole)        3 -1.46474e-03     -1.87e-12
+polygon 58            1045  4.44510e+06      5.68e-03
+polygon 59              22  6.74651e+03      8.63e-06
+polygon 60              64  3.43149e+04      4.39e-05
+polygon 61 (hole)        3 -1.98390e-03     -2.54e-12
+polygon 62 (hole)        4 -1.13774e-02     -1.46e-11
+polygon 63              14  5.86546e+03      7.50e-06
+polygon 64              95  5.96187e+04      7.62e-05
+polygon 65 (hole)        4 -1.86410e-02     -2.38e-11
+polygon 66 (hole)        3 -5.12482e-03     -6.55e-12
+polygon 67 (hole)        3 -1.96410e-03     -2.51e-12
+polygon 68 (hole)        3 -5.55856e-03     -7.11e-12
+polygon 69             234  2.08755e+06      2.67e-03
+polygon 70              10  4.90942e+02      6.28e-07
+polygon 71             234  4.72886e+05      6.05e-04
+polygon 72 (hole)       13 -3.91907e+02     -5.01e-07
+polygon 73              15  4.03300e+04      5.16e-05
+polygon 74             227  1.10308e+06      1.41e-03
+polygon 75              10  6.60195e+03      8.44e-06
+polygon 76              19  3.09221e+04      3.95e-05
+polygon 77             145  9.61782e+05      1.23e-03
+polygon 78              30  4.28933e+03      5.49e-06
+polygon 79              37  1.29481e+04      1.66e-05
+polygon 80               4  9.47108e+01      1.21e-07
+enclosing rectangle: [2667.54, 56396.44] x [15748.72, 50256.33] units
+                     (53730 x 34510 units)
+Window area = 781945000 square units
+Fraction of frame area: 0.422</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>childcareSG_ppp <span class="ot">&lt;-</span> childcare_ppp[sg_owin]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>pg <span class="ot">&lt;-</span> mpsz_sfe <span class="sc">%&gt;%</span> </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(PLN_AREA_N <span class="sc">==</span> <span class="st">"PUNGGOL"</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>tm <span class="ot">&lt;-</span> mpsz_sfe <span class="sc">%&gt;%</span> </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(PLN_AREA_N <span class="sc">==</span> <span class="st">"TAMPINES"</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>ckk <span class="ot">&lt;-</span> mpsz_sfe <span class="sc">%&gt;%</span> </span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(PLN_AREA_N <span class="sc">==</span> <span class="st">"CHOA CHU KANG"</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>jw <span class="ot">&lt;-</span> mpsz_sfe <span class="sc">%&gt;%</span> </span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(PLN_AREA_N <span class="sc">==</span> <span class="st">"JURONG WEST"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Plotting target planning area</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pg, <span class="at">main =</span><span class="st">"Punggol"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="In-class-Ex03_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(tm, <span class="at">main =</span><span class="st">"Tampines"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="In-class-Ex03_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(ckk, <span class="at">main =</span><span class="st">"Choa Chu Kang"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="In-class-Ex03_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(jw, <span class="at">main =</span><span class="st">"Jurong West"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="In-class-Ex03_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
