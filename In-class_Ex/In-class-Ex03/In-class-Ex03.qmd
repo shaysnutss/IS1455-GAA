@@ -7,7 +7,7 @@ date: "`r Sys.Date()`"
 ---
 
 ```{r}
-#eval :false
+
 pacman::p_load(maptools, sf,raster,spatstat,tmap,tidyverse)
 ```
 
@@ -108,10 +108,75 @@ plot(tm, main ="Tampines")
 ```
 
 ```{r}
-plot(ckk, main ="Choa Chu Kang")
+plot(ckk, main ="Chua Chu Kang")
 
 ```
 
 ```{r}
 plot(jw, main ="Jurong West")
+```
+
+## Network constrained kernel density
+
+## Getting started
+
+```{r}
+pacman::p_load(sp,rgdal,sf, spNetwork, tmap, classInt, viridis, tidyverse)
+```
+
+## 2. Data Import and Preparation
+
+```{r}
+network <- st_read(dsn="data/geospatial", layer="Punggol_St")
+```
+
+```{r}
+childcareNew <- st_read(dsn="data/geospatial", layer="Punggol_CC")
+```
+
+### Change projection system
+
+```{r}
+childcareNew <-childcareNew %>% st_transform(crs =3414)
+
+network <-network  %>% st_transform(crs =3414)
+
+```
+
+### Plot
+
+```{r}
+tmap_mode('plot')
+tm_shape(childcareNew) + 
+  tm_dots() + 
+  tm_shape(network) +
+  tm_lines()
+```
+
+```{r}
+lixels <- lixelize_lines(network,750,mindist = 375)
+```
+
+length of a lixel is set to 750m and min length of a lixel is set to 375
+
+```{r}
+samples <- lines_center(lixels)
+```
+
+```{r}
+densities <- nkde(network, 
+                  events = childcareNew,
+                  w = rep(1,nrow(childcareNew)),
+                  samples = samples,
+                  kernel_name = "quartic",
+                  bw = 300, 
+                  div= "bw", 
+                  method = "simple", 
+                  digits = 1, 
+                  tol = 1,
+                  grid_shape = c(1,1), 
+                  max_depth = 8,
+                  agg = 5, #we aggregate events within a 5m radius (faster calculation)
+                  sparse = TRUE,
+                  verbose = FALSE)
 ```
