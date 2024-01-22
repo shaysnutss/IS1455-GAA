@@ -1,0 +1,33 @@
+---
+title: "Hands-On Exercise 3 : "
+
+execute: 
+  warning: false
+date: "`r Sys.Date()`"
+---
+
+```{r}
+#eval :false
+pacman::p_load(maptools, sf,raster,spatstat,tmap,tidyverse)
+```
+
+```{r}
+childcare_sf <- st_read("../../Hands-On_Ex/Hand-on_Ex03/data/ChildCareServices.geojson") %>%
+  st_transform(crs=3414)
+mpsz_sfe <- st_read(dsn="data/geospatial", layer="MP14_SUBZONE_WEB_PL")
+
+```
+
+## Creating Coastal outline
+
+When you apply **`st_union()`** to a collection of polygons, each representing a state within a country, the function merges all these state polygons into a single polygon that represents the entire country, effectively dissolving the boundaries (state lines) between them.
+
+```{r}
+sg_sf <- mpsz_sfe %>%
+  st_union()
+# st_combine combines geometries wirhout dissolve/resolve boundaries but st_union does
+```
+
+```{r}
+plot(sg_sf)
+```

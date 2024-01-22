@@ -8,7 +8,7 @@
 
 <meta name="dcterms.date" content="2024-01-22">
 
-<title>IS415-GAA - In-class exercise 2 : R for geospatial data science</title>
+<title>IS415-GAA - Hands-On Exercise 3 :</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -176,12 +176,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#loading-packages" id="toc-loading-packages" class="nav-link active" data-scroll-target="#loading-packages">Loading packages</a></li>
-  <li><a href="#importing-the-data" id="toc-importing-the-data" class="nav-link" data-scroll-target="#importing-the-data">Importing the data</a>
-  <ul class="collapse">
-  <li><a href="#importing-geospatial-data-into-r" id="toc-importing-geospatial-data-into-r" class="nav-link" data-scroll-target="#importing-geospatial-data-into-r">Importing Geospatial Data into R</a></li>
-  <li><a href="#conversion-of-data-type" id="toc-conversion-of-data-type" class="nav-link" data-scroll-target="#conversion-of-data-type">Conversion of data type</a></li>
-  </ul></li>
+  <li><a href="#creating-coastal-outline" id="toc-creating-coastal-outline" class="nav-link active" data-scroll-target="#creating-coastal-outline">Creating Coastal outline</a></li>
   </ul>
 </nav>
     </div>
@@ -190,7 +185,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">In-class exercise 2 : R for geospatial data science</h1>
+<h1 class="title">Hands-On Exercise 3 :</h1>
 </div>
 
 
@@ -211,79 +206,52 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
-<p>Hey friends! Let’s learn about a few package:</p>
-<ol type="1">
-<li>arrow</li>
-<li>lubridate</li>
-<li>tidyverse</li>
-<li>tmap</li>
-<li>sf</li>
-</ol>
-<section id="what-does-lubridate-do" class="level4">
-<h4 class="anchored" data-anchor-id="what-does-lubridate-do">What does lubridate do?</h4>
-<p>Helps me lubricate data and handle datte and time. It is part of tidyverse but later part of it, so it has to be installed separately.</p>
-</section>
-<section id="what-does-arrow-do" class="level4">
-<h4 class="anchored" data-anchor-id="what-does-arrow-do">What does arrow do?</h4>
-<p>It helps you efficiently interchange data between programming languages.</p>
-</section>
-<section id="loading-packages" class="level2">
-<h2 class="anchored" data-anchor-id="loading-packages">Loading packages</h2>
-<p>This is a very important step as we have to load the packages before we can use them.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, tmap, tidyverse,lubridate,arrow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="importing-the-data" class="level2">
-<h2 class="anchored" data-anchor-id="importing-the-data">Importing the data</h2>
-<section id="importing-geospatial-data-into-r" class="level3">
-<h3 class="anchored" data-anchor-id="importing-geospatial-data-into-r">Importing Geospatial Data into R</h3>
-<p>As learnt in the previous page, we use <code>st_read()</code> function of the sf package to read in the data.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(<span class="st">"../../data/GrabPosisi/part-00000-8bbff892-97d2-4011-9961-703e38972569.c000.snappy.parquet"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="conversion-of-data-type" class="level3">
-<h3 class="anchored" data-anchor-id="conversion-of-data-type">Conversion of data type</h3>
-<p>Here we convert the int data type to date time data type. We are not using mutate, as we are over writing the data field in the file.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>pingtimestamp <span class="ot">&lt;-</span><span class="fu">as_datetime</span>(df<span class="sc">$</span>pingtimestamp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#eval :false</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(maptools, sf,raster,spatstat,tmap,tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get origin</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>origin_df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> <span class="co">#use df</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(trj_id) <span class="sc">%&gt;%</span> <span class="co">#group according to trj_id</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(pingtimestamp) <span class="sc">%&gt;%</span> <span class="co">#sort according to timestamp asc (default)</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">row_number</span>()<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="co">#the first coordinate for every trip should be the origin</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">weekday =</span> <span class="fu">wday</span>(pingtimestamp, <span class="at">label=</span><span class="cn">TRUE</span>, <span class="at">abbr=</span><span class="cn">TRUE</span>),</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">start_hr =</span> <span class="fu">factor</span>(<span class="fu">hour</span>(pingtimestamp)),</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">day =</span> <span class="fu">factor</span>(<span class="fu">mday</span>(pingtimestamp)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>childcare_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"../../Hands-On_Ex/Hand-on_Ex03/data/ChildCareServices.geojson"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs=</span><span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `ChildCareServices' from data source 
+  `C:\shaysnutss\IS1455-GAA\Hands-on_Ex\Hand-on_Ex03\data\ChildCareServices.geojson' 
+  using driver `GeoJSON'
+Simple feature collection with 1925 features and 2 fields
+Geometry type: POINT
+Dimension:     XYZ
+Bounding box:  xmin: 103.6878 ymin: 1.247759 xmax: 103.9897 ymax: 1.462134
+z_range:       zmin: 0 zmax: 0
+Geodetic CRS:  WGS 84</code></pre>
 </div>
-<p>each trip will have multiple rows because every minute the new location one be sent to the server . so when we arrange it, the first row is the origin location.</p>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>mpsz_sfe <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn=</span><span class="st">"data/geospatial"</span>, <span class="at">layer=</span><span class="st">"MP14_SUBZONE_WEB_PL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `MP14_SUBZONE_WEB_PL' from data source 
+  `C:\shaysnutss\IS1455-GAA\In-class_Ex\In-class-Ex03\data\geospatial' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 323 features and 15 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 2667.538 ymin: 15748.72 xmax: 56396.44 ymax: 50256.33
+Projected CRS: SVY21</code></pre>
+</div>
+</div>
+<section id="creating-coastal-outline" class="level2">
+<h2 class="anchored" data-anchor-id="creating-coastal-outline">Creating Coastal outline</h2>
+<p>When you apply <strong><code>st_union()</code></strong> to a collection of polygons, each representing a state within a country, the function merges all these state polygons into a single polygon that represents the entire country, effectively dissolving the boundaries (state lines) between them.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get end</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>destination_df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> <span class="co">#use df</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(trj_id) <span class="sc">%&gt;%</span> <span class="co">#group according to trj_id</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(pingtimestamp)) <span class="sc">%&gt;%</span> <span class="co">#sort according to timestamp asc (default)</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">row_number</span>()<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="co">#the first coordinate for every trip should be the origin</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">weekday =</span> <span class="fu">wday</span>(pingtimestamp, <span class="at">label=</span><span class="cn">TRUE</span>, <span class="at">abbr=</span><span class="cn">TRUE</span>),</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">end_hr =</span> <span class="fu">factor</span>(<span class="fu">hour</span>(pingtimestamp)),</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">day =</span> <span class="fu">factor</span>(<span class="fu">mday</span>(pingtimestamp)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>sg_sf <span class="ot">&lt;-</span> mpsz_sfe <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_union</span>()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># st_combine combines geometries wirhout dissolve/resolve boundaries but st_union does</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># he writes in rds if he still wants to write in r</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(origin_df, <span class="st">"../../data/rds/origin_df.rds"</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(destination_df,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>          <span class="st">"../../data/rds/destination_df.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(sg_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="In-class-Ex03_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
 </div>
-<p>#import data</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>origin_df <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"../../data/rds/origin_df.rds"</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>destination_df <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"../../data/rds/destination_df.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
