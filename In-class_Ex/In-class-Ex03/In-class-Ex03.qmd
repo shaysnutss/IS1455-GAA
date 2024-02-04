@@ -20,6 +20,10 @@ mpsz_sfe <- st_read(dsn="data/geospatial", layer="MP14_SUBZONE_WEB_PL")
 
 ```
 
+```{r}
+class(mpsz_sfe)
+```
+
 ## Creating Coastal outline
 
 When you apply **`st_union()`** to a collection of polygons, each representing a state within a country, the function merges all these state polygons into a single polygon that represents the entire country, effectively dissolving the boundaries (state lines) between them.

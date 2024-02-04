@@ -62,6 +62,26 @@ origin_df <- df %>% #use df
 
 ```
 
+```{r}
+df_summary <- df %>%
+  group_by(trj_id) %>%
+  summarize(count = n(), .groups = 'drop')
+
+# Display the first few rows of the summary to check
+head(df_summary)
+
+```
+
+```{r}
+df_summary <- origin_df %>%
+  group_by(trj_id) %>%
+  summarize(count = n(), .groups = 'drop')
+
+# Display the first few rows of the summary to check
+head(df_summary)
+
+```
+
 each trip will have multiple rows because every minute the new location one be sent to the server . so when we arrange it, the first row is the origin location.
 
 ```{r}
@@ -87,4 +107,8 @@ write_rds(destination_df,
 ```{r}
 origin_df <- read_rds("../../data/rds/origin_df.rds")
 destination_df <- read_rds("../../data/rds/destination_df.rds")
+```
+
+```{r}
+rm(grabOriginSg)
 ```
