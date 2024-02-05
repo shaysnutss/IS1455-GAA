@@ -105,3 +105,5 @@ global_moran_perm(wm_q$GDPPC,
                   wm_q$wt,
                   nsim=99)
 ```
+
+the report show that p value is smaller than alpha value of o,o,5. ALWAYS SAY U INFER NOT PROVING. we have enouh stat evidence to reject nullhypo that spatial distriution .
