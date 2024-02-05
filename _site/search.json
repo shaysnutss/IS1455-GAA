@@ -341,5 +341,54 @@
     "title": "IS1455-GAA",
     "section": "",
     "text": "Welcome to IS415 Geospatial Analytics and Applications.\nThis is the course website of the IS415 mod that I am embarking on this semester. You will find my course materials here. Have fun:)"
+  },
+  {
+    "objectID": "In-class_Ex/In-class-Ex05/In-class-Ex05.html",
+    "href": "In-class_Ex/In-class-Ex05/In-class-Ex05.html",
+    "title": "Take-home Exercise 1 : Application of Spatial Point Patterns Analysis to discover the geographical distribution of Grab hailing services in Singapore",
+    "section": "",
+    "text": "We would need this take home exercise 2!"
+  },
+  {
+    "objectID": "In-class_Ex/In-class-Ex05/In-class-Ex05.html#installing-and-loading-r-packages",
+    "href": "In-class_Ex/In-class-Ex05/In-class-Ex05.html#installing-and-loading-r-packages",
+    "title": "Take-home Exercise 1 : Application of Spatial Point Patterns Analysis to discover the geographical distribution of Grab hailing services in Singapore",
+    "section": "Installing and loading R packages",
+    "text": "Installing and loading R packages\nLet’s import !\n\npacman::p_load(sfdep, sf, tmap, tidyverse)"
+  },
+  {
+    "objectID": "In-class_Ex/In-class-Ex05/In-class-Ex05.html#data-import",
+    "href": "In-class_Ex/In-class-Ex05/In-class-Ex05.html#data-import",
+    "title": "Take-home Exercise 1 : Application of Spatial Point Patterns Analysis to discover the geographical distribution of Grab hailing services in Singapore",
+    "section": "Data Import",
+    "text": "Data Import\n\nGeospatial\n\nhunan &lt;- st_read(dsn = \"data/data/geospatial\",\n layer  = \"Hunan\")\n\nReading layer `Hunan' from data source \n  `C:\\shaysnutss\\IS1455-GAA\\In-class_Ex\\In-class-Ex05\\data\\data\\geospatial' \n  using driver `ESRI Shapefile'\nSimple feature collection with 88 features and 7 fields\nGeometry type: POLYGON\nDimension:     XY\nBounding box:  xmin: 108.7831 ymin: 24.6342 xmax: 114.2544 ymax: 30.12812\nGeodetic CRS:  WGS 84\n\n\n\n\nAspatial\n\nhunan2012 &lt;- read_csv(\"data/data/aspatial/Hunan_2012.csv\")"
+  },
+  {
+    "objectID": "In-class_Ex/In-class-Ex05/In-class-Ex05.html#data-wrangling",
+    "href": "In-class_Ex/In-class-Ex05/In-class-Ex05.html#data-wrangling",
+    "title": "Take-home Exercise 1 : Application of Spatial Point Patterns Analysis to discover the geographical distribution of Grab hailing services in Singapore",
+    "section": "Data Wrangling",
+    "text": "Data Wrangling\nMake sure that the names of the columns you are joining ais the same. Not just that, make sure the column has the same values. To do so, you sort it first, and compare the values of both of them. Since they are the same , you can do a relational join.\n\n\n\n\n\n\nNote\n\n\n\nWhat’s the difference between left join and right join? Find out\n\n\n\nhuman_GDPPC &lt;- left_join(hunan, hunan2012) %&gt;%\n  select(1:4, 7, 15)\n# only need gdp per capita and geometry, thats why we take those columns\n\neval:false is a directive that tells the Quarto rendering engine not to evaluate or execute the code in this chunk. This can be useful when you want to show the code for instructional or illustrative purposes without actually running it\n\nwrite_rds(hunan_GDPPC,\n          \"data/rds/hunan_GDPPC.rds\")\n\n\ntmap_mode(\"plot\")\ntm_shape(human_GDPPC) +\n  tm_fill(\"GDPPC\",\n          style = \"quantile\",\n          palette = \"Blues\",\n          title = \"GDPPC\") + \n  tm_layout(main.title = \"distribution of gdp per capita\",\n            main.title.position = \"center\",\n            main.title.size = 1.2,\n            legend.height = 0.45,\n            legend.width = 0.35,\n            frame = TRUE) +\n  tm_borders(alpha = 0.5) +\n  tm_compass(type = \"8star\", size = 2) +\n  tm_scale_bar() +\n  tm_grid(alpha = 0.2)\n\n\n\n\n\nwm_q &lt;- human_GDPPC %&gt;%\n  mutate(nb = st_contiguity(geometry),\n         wt= st_weights(nb, style = \"W\"),\n         .before = 1)\n\n\nComputing Global Moran’ I\n\nmoranI &lt;- global_moran(wm_q$GDPPC,\n                       wm_q$nb,\n                       wm_q$wt)\nglimpse(moranI)\n\nList of 2\n $ I: num 0.301\n $ K: num 7.64\n\n\n\n\nPerforming global moran’I permutation test\nThis is the only one required for take home exercise, the one directly before is not needed.\n\nset.seed(1234)\n\n\nglobal_moran_perm(wm_q$GDPPC,\n                  wm_q$nb,\n                  wm_q$wt,\n                  nsim=99)\n\n\n    Monte-Carlo simulation of Moran I\n\ndata:  x \nweights: listw  \nnumber of simulations + 1: 100 \n\nstatistic = 0.30075, observed rank = 100, p-value &lt; 2.2e-16\nalternative hypothesis: two.sided"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html",
+    "href": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html",
+    "title": "Hands-on Exercise 7 : Network Constrained Spatial Point Patterns Analysis",
+    "section": "",
+    "text": "Network constrained Spatial Point Patterns Analysis (NetSPAA) is a collection of spatial point patterns analysis methods special developed for analysing spatial point event occurs on or alongside network. The spatial point event can be locations of traffic accident or childcare centre for example. The network, on the other hand can be a road network or river network.\nIn this hands-on exercise, you are going to gain hands-on experience on using appropriate functions of spNetwork package:\n\nto derive network constrained kernel density estimation (NetKDE), and\nto perform network G-function and k-function analysis\n\nHow common is it for a point to have its nearest neighbor within 10 units\ncalculates the probability that a point is of ≤x distance away from its nearest neighbour\nprobability that the distance from a randomly chosen point to its nearest neighbor is less than or equal to a certain value.\n\nIf you find that the G function indicates a higher probability of short distances between flowers than you’d expect by chance, it suggests that flowers are clustered rather than randomly or evenly distributed."
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#overview",
+    "href": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#overview",
+    "title": "Hands-on Exercise 7 : Network Constrained Spatial Point Patterns Analysis",
+    "section": "",
+    "text": "Network constrained Spatial Point Patterns Analysis (NetSPAA) is a collection of spatial point patterns analysis methods special developed for analysing spatial point event occurs on or alongside network. The spatial point event can be locations of traffic accident or childcare centre for example. The network, on the other hand can be a road network or river network.\nIn this hands-on exercise, you are going to gain hands-on experience on using appropriate functions of spNetwork package:\n\nto derive network constrained kernel density estimation (NetKDE), and\nto perform network G-function and k-function analysis\n\nHow common is it for a point to have its nearest neighbor within 10 units\ncalculates the probability that a point is of ≤x distance away from its nearest neighbour\nprobability that the distance from a randomly chosen point to its nearest neighbor is less than or equal to a certain value.\n\nIf you find that the G function indicates a higher probability of short distances between flowers than you’d expect by chance, it suggests that flowers are clustered rather than randomly or evenly distributed."
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#the-data",
+    "href": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#the-data",
+    "title": "Hands-on Exercise 7 : Network Constrained Spatial Point Patterns Analysis",
+    "section": "7.2 The Data",
+    "text": "7.2 The Data\nIn this study, we will analyse the spatial distribution of childcare centre in Punggol planning area. For the purpose of this study, two geospatial data sets will be used. They are:\n\nPunggol_St, a line features geospatial data which store the road network within Punggol Planning Area.\nPunggol_CC, a point feature geospatial data which store the location of childcare centres within Punggol Planning Area.\n\nBoth data sets are in ESRI shapefile format."
   }
 ]

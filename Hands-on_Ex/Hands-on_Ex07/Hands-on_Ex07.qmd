@@ -1,0 +1,35 @@
+---
+title: "Hands-on Exercise 7 : Network Constrained Spatial Point Patterns Analysis"
+
+execute: 
+  warning: false
+date: "`r Sys.Date()`"
+---
+
+## 7.1 Overview
+
+**Network constrained Spatial Point Patterns Analysis (NetSPAA)** is a collection of spatial point patterns analysis methods special developed for analysing spatial point event occurs on or alongside network. The spatial point event can be locations of traffic accident or childcare centre for example. The network, on the other hand can be a road network or river network.
+
+In this hands-on exercise, you are going to gain hands-on experience on using appropriate functions of **spNetwork** package:
+
+-   to derive **network constrained kernel density estimation (NetKDE)**, and
+
+-   to perform network G-function and k-function analysis
+
+    -   How common is it for a point to have its nearest neighbor within 10 units
+
+    -   calculates the probability that a point is of ≤x distance away from its nearest neighbour
+
+    -   probability that the distance from a randomly chosen point to its nearest neighbor is less than or equal to a certain value.
+
+-   If you find that the G function indicates a higher probability of short distances between flowers than you'd expect by chance, it suggests that flowers are clustered rather than randomly or evenly distributed.
+
+## **7.2 The Data**
+
+In this study, we will analyse the spatial distribution of childcare centre in [Punggol planning area](https://en.wikipedia.org/wiki/Punggol). For the purpose of this study, two geospatial data sets will be used. They are:
+
+-   *Punggol_St*, a line features geospatial data which store the road network within Punggol Planning Area.
+
+-   *Punggol_CC*, a point feature geospatial data which store the location of childcare centres within Punggol Planning Area.
+
+Both data sets are in ESRI shapefile format.

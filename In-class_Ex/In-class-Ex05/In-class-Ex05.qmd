@@ -1,0 +1,107 @@
+---
+title: "Take-home Exercise 1 : Application of Spatial Point Patterns Analysis to discover the geographical distribution of Grab hailing services in Singapore"
+
+execute: 
+  warning: false
+date: "`r Sys.Date()`"
+---
+
+We would need this take home exercise 2!
+
+## Installing and loading R packages
+
+Let's import !
+
+```{r}
+pacman::p_load(sfdep, sf, tmap, tidyverse)
+```
+
+## Data Import
+
+### Geospatial
+
+```{r}
+hunan <- st_read(dsn = "data/data/geospatial",
+ layer  = "Hunan")
+```
+
+### Aspatial
+
+```{r}
+hunan2012 <- read_csv("data/data/aspatial/Hunan_2012.csv")
+```
+
+## Data Wrangling
+
+Make sure that the names of the columns you are joining ais the same. Not just that, make sure the column has the same values. To do so, you sort it first, and compare the values of both of them. Since they are the same , you can do a relational join.
+
+::: callout-note
+What's the difference between left join and right join? Find out
+:::
+
+```{r}
+
+human_GDPPC <- left_join(hunan, hunan2012) %>%
+  select(1:4, 7, 15)
+# only need gdp per capita and geometry, thats why we take those columns
+```
+
+**`eval:false`** is a directive that tells the Quarto rendering engine not to evaluate or execute the code in this chunk. This can be useful when you want to show the code for instructional or illustrative purposes without actually running it
+
+```{r}
+#| eval: false
+write_rds(hunan_GDPPC,
+          "data/rds/hunan_GDPPC.rds")
+```
+
+```{r}
+
+tmap_mode("plot")
+tm_shape(human_GDPPC) +
+  tm_fill("GDPPC",
+          style = "quantile",
+          palette = "Blues",
+          title = "GDPPC") + 
+  tm_layout(main.title = "distribution of gdp per capita",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45,
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type = "8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha = 0.2)
+  
+```
+
+```{r}
+wm_q <- human_GDPPC %>%
+  mutate(nb = st_contiguity(geometry),
+         wt= st_weights(nb, style = "W"),
+         .before = 1)
+```
+
+### Computing Global Moran' I
+
+```{r}
+moranI <- global_moran(wm_q$GDPPC,
+                       wm_q$nb,
+                       wm_q$wt)
+glimpse(moranI)
+```
+
+### Performing global moran'I permutation test
+
+This is the only one required for take home exercise, the one directly before is not needed.
+
+```{r}
+set.seed(1234)
+```
+
+```{r}
+global_moran_perm(wm_q$GDPPC,
+                  wm_q$nb,
+                  wm_q$wt,
+                  nsim=99)
+```
