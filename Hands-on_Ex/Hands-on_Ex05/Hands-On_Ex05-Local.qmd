@@ -1,0 +1,318 @@
+---
+title: "Hands-on Exercise 9 : Global Measures of Spatial Autocorrelation"
+
+execute: 
+  warning: false
+date: "`febuary 5,2023`"
+---
+
+## **10.1 Overview**
+
+In this hands-on exercise, you will learn how to compute Global and Local Measure of Spatial Autocorrelation (GLSA) by using **spdep** package. By the end to this hands-on exercise, you will be able to:
+
+-   import geospatial data using appropriate function(s) of **sf** package,
+
+-   import csv file using appropriate function of **readr** package,
+
+-   perform relational join using appropriate join function of **dplyr** package,
+
+-   compute Global Spatial Autocorrelation (GSA) statistics by using appropriate functions of **spdep** package,
+
+    -   plot Moran scatterplot,
+
+    -   compute and plot spatial correlogram using appropriate function of **spdep** package.
+
+-   compute Local Indicator of Spatial Association (LISA) statistics for detecting clusters and outliers by using appropriate functions **spdep** package;
+
+-   compute Getis-Ord’s Gi-statistics for detecting hot spot or/and cold spot area by using appropriate functions of **spdep** package; and
+
+-   to visualise the analysis output by using **tmap** package.
+
+## **10.2 Getting Started**
+
+### **10.2.1 The analytical question**
+
+In spatial policy, one of the main development objective of the local govenment and planners is to ensure equal distribution of development in the province. Our task in this study, hence, is to apply appropriate spatial statistical methods to discover if development are even distributed geographically. If the answer is **No**. Then, our next question will be “is there sign of spatial clustering?”. And, if the answer for this question is yes, then our next question will be “where are these clusters?”
+
+In this case study, we are interested to examine the spatial pattern of a selected development indicator (i.e. GDP per capita) of Hunan Provice, People Republic of China.(https://en.wikipedia.org/wiki/Hunan)
+
+### **10.2.2 The Study Area and Data**
+
+Two data sets will be used in this hands-on exercise, they are:
+
+-   Hunan province administrative boundary layer at county level. This is a geospatial data set in ESRI shapefile format.
+
+-   Hunan_2012.csv: This csv file contains selected Hunan’s local development indicators in 2012.
+
+### **10.2.3 Setting the Analytical Toolls**
+
+Before we get started, we need to ensure that **spdep**, **sf**, **tmap** and **tidyverse** packages of R are currently installed in your R.
+
+-   sf is use for importing and handling geospatial data in R,
+
+-   tidyverse is mainly use for wrangling attribute data in R,
+
+-   spdep will be used to compute spatial weights, global and local spatial autocorrelation statistics, and
+
+-   tmap will be used to prepare cartographic quality chropleth map.
+
+The code chunk below is used to perform the following tasks:
+
+-   creating a package list containing the necessary R packages,
+
+-   checking if the R packages in the package list have been installed in R,
+
+    -   if they have yet to be installed, RStudio will installed the missing packages,
+
+-   launching the packages into R environment.
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse)
+```
+
+## **10.3 Getting the Data Into R Environment**
+
+In this section, you will learn how to bring a geospatial data and its associated attribute table into R environment. The geospatial data is in ESRI shapefile format and the attribute table is in csv fomat.
+
+### **10.3.1 Import shapefile into r environment**
+
+The code chunk below uses [*st_read()*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package to import Hunan shapefile into R. The imported shapefile will be **simple features** Object of **sf**.
+
+```{r}
+hunan <- st_read(dsn = "../Hands-On_Ex04/data/geospatial", 
+                 layer = "Hunan")
+```
+
+### **10.3.2 Import csv file into r environment**
+
+Next, we will import *Hunan_2012.csv* into R by using *read_csv()* of **readr** package. The output is R data frame class.
+
+```{r}
+hunan2012 <- read_csv("../Hands-On_Ex04/data/aspatial/Hunan_2012.csv")
+```
+
+### **10.3.3 Performing relational join**
+
+The code chunk below will be used to update the attribute table of *hunan*’s SpatialPolygonsDataFrame with the attribute fields of *hunan2012* dataframe. This is performed by using *left_join()* of **dplyr** package.
+
+```{r}
+hunan <- left_join(hunan,hunan2012) %>%
+  select(1:4, 7, 15)
+```
+
+### **10.3.4 Visualising Regional Development Indicator**
+
+Now, we are going to prepare a basemap and a choropleth map showing the distribution of GDPPC 2012 by using *qtm()* of **tmap** package.
+
+```{r}
+equal <- tm_shape(hunan) +
+  tm_fill("GDPPC",
+          n = 5,
+          style = "equal") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal interval classification")
+
+quantile <- tm_shape(hunan) +
+  tm_fill("GDPPC",
+          n = 5,
+          style = "quantile") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal quantile classification")
+
+tmap_arrange(equal, 
+             quantile, 
+             asp=1, 
+             ncol=2)
+```
+
+### **10.4.1 Computing Contiguity Spatial Weights**
+
+Before we can compute the global spatial autocorrelation statistics, we need to construct a spatial weights of the study area. The spatial weights is used to define the neighbourhood relationships between the geographical units (i.e. county) in the study area.
+
+In the code chunk below, [*poly2nb()*](https://r-spatial.github.io/spdep/reference/poly2nb.html) of **spdep** package is used to compute contiguity weight matrices for the study area. This function builds a neighbours list based on regions with contiguous boundaries. If you look at the documentation you will see that you can pass a “queen” argument that takes TRUE or FALSE as options. If you do not specify this argument the default is set to TRUE, that is, if you don’t specify queen = FALSE this function will return a list of first order neighbours using the Queen criteria.
+
+More specifically, the code chunk below is used to compute Queen contiguity weight matrix.
+
+```{r}
+wm_q <- poly2nb(hunan, 
+                queen=TRUE)
+summary(wm_q)
+```
+
+The summary report above shows that there are 88 area units in Hunan. The most connected area unit has 11 neighbours. There are two area units with only one neighbours.
+
+### **10.4.2 Row-standardised weights matrix**
+
+Next, we need to assign weights to each neighboring polygon. In our case, each neighboring polygon will be assigned equal weight (style=“W”). This is accomplished by assigning the fraction 1/(#ofneighbors) to each neighboring county then summing the weighted income values. While this is the most intuitive way to summaries the neighbors’ values it has one drawback in that polygons along the edges of the study area will base their lagged values on fewer polygons thus potentially over- or under-estimating the true nature of the spatial autocorrelation in the data. For this example, we’ll stick with the style=“W” option for simplicity’s sake but note that other more robust options are available, notably style=“B”.
+
+```{r}
+rswm_q <- nb2listw(wm_q, 
+                   style="W", 
+                   zero.policy = TRUE)
+rswm_q
+```
+
+### **10.4.3 Global Spatial Autocorrelation: Moran’s I**
+
+In this section, you will learn how to perform Moran’s I statistics testing by using [*moran.test()*](https://r-spatial.github.io/spdep/reference/moran.test.html) of **spdep**.
+
+### **10.4.4 Maron’s I test**
+
+The code chunk below performs Moran’s I statistical testing using [*moran.test()*](https://r-spatial.github.io/spdep/reference/moran.test.html) of **spdep**.
+
+```{r}
+moran.test(hunan$GDPPC, 
+           listw=rswm_q, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+#### 10.4.4.1 Computing Monte Carlo Moran’s I
+
+The code chunk below performs permutation test for Moran’s I statistic by using [*moran.mc()*](https://r-spatial.github.io/spdep/reference/moran.mc.html) of **spdep**. A total of 1000 simulation will be performed.
+
+```{r}
+set.seed(1234)
+bperm= moran.mc(hunan$GDPPC, 
+                listw=rswm_q, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm
+```
+
+#### 10.4.4.2 Visualising Monte Carlo Moran’s I
+
+It is always a good practice for us the examine the simulated Moran’s I test statistics in greater detail. This can be achieved by plotting the distribution of the statistical values as a histogram by using the code chunk below.
+
+In the code chunk below [*hist()*](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/hist) and [*abline()*](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/abline) of R Graphics are used.
+
+```{r}
+mean(bperm$res[1:999])
+```
+
+```{r}
+var(bperm$res[1:999])
+```
+
+```{r}
+summary(bperm$res[1:999])
+```
+
+```{r}
+hist(bperm$res, 
+     freq=TRUE, 
+     breaks=20, 
+     xlab="Simulated Moran's I")
+abline(v=0, 
+       col="red") 
+```
+
+### **10.4.5 Global Spatial Autocorrelation: Geary’s**
+
+In this section, you will learn how to perform Geary’s c statistics testing by using appropriate functions of **spdep** package.
+
+#### 10.4.5.1 Geary’s C test
+
+The code chunk below performs Geary’s C test for spatial autocorrelation by using [*geary.test()*](https://r-spatial.github.io/spdep/reference/geary.test.html) of **spdep**.
+
+```{r}
+geary.test(hunan$GDPPC, listw=rswm_q)
+```
+
+#### 10.4.5.2 Computing Monte Carlo Geary’s C
+
+The code chunk below performs permutation test for Geary’s C statistic by using [*geary.mc()*](https://r-spatial.github.io/spdep/reference/geary.mc.html) of **spdep**.
+
+```{r}
+set.seed(1234)
+bperm=geary.mc(hunan$GDPPC, 
+               listw=rswm_q, 
+               nsim=999)
+bperm
+```
+
+When you perform a Monte Carlo simulation, you're essentially creating many random samples (in your case, 1000) based on the null hypothesis, which assumes there is no spatial autocorrelation. Each of these samples will have its own Geary's C statistic. [These simulated statistics create a distribution against which you can compare the Geary's C statistic from your actual data.]{.underline}
+
+The "observed rank" is where the actual Geary's C statistic falls within this distribution. If the "observed rank" is 1, as in your output, it means that the actual statistic is the smallest out of all the simulated statistics — it's ranked first, or in other words, no simulated statistic is smaller than the actual one.
+
+#### **Interpreting the Observed Rank**
+
+The observed rank helps to understand the p-value in a Monte Carlo simulation:
+
+-   A **low rank** (like 1) means that the actual statistic is at the very low end of the simulated distribution, indicating that the actual observed spatial pattern is more pronounced than almost all patterns generated under the null hypothesis.
+
+-   Conversely, a **high rank** would indicate that the actual statistic is at the high end of the simulated distribution, closer to patterns one might expect by chance.
+
+The rank, when considered with the p-value, tells us about the statistical significance of the actual Geary's C statistic:
+
+-   With a rank of 1 and a p-value of 0.001, it's very unlikely that the observed pattern happened by chance. This low p-value suggests that the spatial pattern detected by the actual Geary's C statistic is statistically significant.
+
+In sum, the rank in a Monte Carlo simulation for Geary's C provides context for the p-value and helps confirm the statistical significance of the spatial pattern observed in your data.
+
+#### 10.4.5.3 Visualising the Monte Carlo Geary’s C
+
+Next, we will plot a histogram to reveal the distribution of the simulated values by using the code chunk below.
+
+```{r}
+mean(bperm$res[1:999])
+```
+
+```{r}
+var(bperm$res[1:999])
+```
+
+```{r}
+summary(bperm$res[1:999])
+```
+
+```{r}
+hist(bperm$res, freq=TRUE, breaks=20, xlab="Simulated Geary c")
+abline(v=1, col="red") 
+```
+
+## **10.5 Spatial Correlogram**
+
+Spatial correlograms are great to examine patterns of spatial autocorrelation in your data or model residuals. They show how correlated are pairs of spatial observations when you increase the distance (lag) between them - they are plots of some index of autocorrelation (Moran’s I or Geary’s c) against distance.Although correlograms are not as fundamental as variograms (a keystone concept of geostatistics), they are very useful as an exploratory and descriptive tool. For this purpose they actually provide richer information than variograms.
+
+### **10.5.1 Compute Moran’s I correlogram**
+
+In the code chunk below, [*sp.correlogram()*](https://r-spatial.github.io/spdep/reference/sp.correlogram.html) of **spdep** package is used to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Moran’s I. The **plot()** of base Graph is then used to plot the output.
+
+A correlogram is a chart that shows how well the value of a variable, measured at one location, predicts the value at another location across various distances. In spatial analysis, this means looking at [how the similarity between places changes as the distance between them increases.]{.underline}
+
+-   **X-axis (Lags)**: The x-axis shows the "lags", which represent different levels of spatial relationship or distance classes. A lag of 1 indicates immediate neighbors, lag 2 indicates the neighbors of those neighbors, and so on, up to lag 6.
+
+-   **Y-axis (Moran's I)**: The y-axis represents the Moran's I statistic for each lag. Moran's I values range from -1 to 1. Positive values indicate positive spatial autocorrelation (similar values cluster together), values around zero indicate a random spatial pattern, and negative values indicate negative spatial autocorrelation (dissimilar values cluster together).
+
+-   **points**: Each point on the correlogram represents the Moran's I statistic calculated for that particular lag. The value of Moran's I at lag 1 being the highest and positive suggests that neighboring areas (the first level of neighbors) have the most significant positive spatial autocorrelation, indicating that areas with similar GDP per capita values are geographically close.
+
+-   **Vertical Lines (Error Bars)**: The vertical lines extending from each point represent the uncertainty or variability in the Moran's I estimates, often corresponding to confidence intervals. The length of the line indicates the range of Moran's I values that are statistically plausible for that lag. If the line crosses the horizontal line at Moran's I = 0, the spatial autocorrelation for that lag is not statistically significant at the chosen confidence level.
+
+```{r}
+MI_corr <- sp.correlogram(wm_q, 
+                          hunan$GDPPC, 
+                          order=6, 
+                          method="I", 
+                          style="W")
+plot(MI_corr)
+```
+
+By plotting the output might not allow us to provide complete interpretation. This is because not all autocorrelation values are statistically significant. Hence, it is important for us to examine the full analysis report by printing out the analysis results as in the code chunk below.
+
+```{r}
+print(MI_corr)
+```
+
+### **10.5.2 Compute Geary’s C correlogram and plot**
+
+In the code chunk below, *sp.correlogram()* of **spdep** package is used to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Geary’s C. The **plot()** of base Graph is then used to plot the output.
+
+```{r}
+GC_corr <- sp.correlogram(wm_q, 
+                          hunan$GDPPC, 
+                          order=6, 
+                          method="C", 
+                          style="W")
+plot(GC_corr)
+```
