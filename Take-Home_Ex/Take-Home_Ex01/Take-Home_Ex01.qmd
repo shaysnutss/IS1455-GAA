@@ -87,7 +87,7 @@ Shows distribution of a characteristic across a geographic space.
 Let us first look at the data we are utilising to conduct this analysis.
 
 |                                            |                                                                     |            |                |                                                                             |
-|--------------|--------------|--------------|--------------|---------------|
+|--------------------------------------------|---------------------------------------------------------------------|------------|----------------|-----------------------------------------------------------------------------|
 | Data Name                                  | Description                                                         | Type       | Format         | Source                                                                      |
 | Grab-Posisi                                | Data on where grab taxis are at a specific time, and at what speed. | Aspatial   | .parquet       | [Source](https://engineering.grab.com/grab-posisi)                          |
 | Road data set                              | Data on the roads present in Singapore, Malaysia, Brunei.           | Geospatial | ESRI shapefile | [Source](https://download.geofabrik.de/asia/malaysia-singapore-brunei.html) |

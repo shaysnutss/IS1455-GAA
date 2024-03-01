@@ -1,0 +1,501 @@
+---
+title: "Take-home Exercise 2: Application of Spatial and Spatio-temporal Analysis Methods to Discover the Distribution of Dengue Fever in Tainan City, Taiwan"
+
+execute: 
+  warning: false
+date: "`r Sys.Date()`"
+---
+
+# 1. Background & Context
+
+In this take home exercise, our central subject of study would be Dengue.
+
+## 1.1 What is Dengue?
+
+Dengue is a disease spread by mosquitoes, particularly, the female Aedes aegypti and Aedes albopictus mosquitoes, in tropical and subtropical regions like Taiwan. It is transmitted to humans through the bite of the aforementioned mosquitoes. When a mosquito bites a dengue-infected person, the mosquito is then infected. After approximately one week, the mosquito can then transmit the virus to other people they bite. It can result in sudden high fever, severe headache, joint pains and skin rashes.
+
+## 1.2 Why Study It?
+
+It can easily spread in areas in Taiwan due to the tropical climate, the high population density and numerous pools of stagnant water - which is a loved breeding ground for mosquitoes. It is imperative to track the speed at which it spreads and the areas in which it can spread in order to curtail its spread. And thats what we will be doing in this take home exercise.
+
+## 1.3 What in particular are we investigating?
+
+1.  We firstly want to know if the outbreaks in Taiwan are independent of space and time. That means that the dengue instances would be randomly distributed and not show any pattern
+2.  If they are not independent of space and time, we would want to find certain areas that have high incidents of dengue (hotspots) and low incidents of it (coldspots). We also want to find if there are certain times of the year when outbreaks are more common.
+
+# 2. Packages
+
+In this section, I will be installing and loading R packages into our R environment to use them. I will also explain the utility of each package.
+
+```{r}
+pacman::p_load(sf, tidyverse, tmap, sfdep)
+```
+
+*Sf*
+
+It provides a comprehensive and standardized way to represent and manipulate spatial data.
+
+1.  Allows you to represent points, lines and polygons
+2.  Allows you to represent data using coordinate reference system, and transform data using that.
+
+***tidyverse*** 
+
+Imagine you have a bunch of dirty data that you woul have to handle. The Tidyverse package helps you handle the data. It has a bunch of packages within it to help handle data. It can do the following:
+
+1.  readr - reading and writing data into or out of a spreadsheet
+
+2.  tidyr - organizing and tidying up your data
+
+3.  ggplot2 - visualizing your data
+
+4.  dpylr - mainpulating your data, like doing some basic math to it.
+
+***tmap***
+
+Shows distribution of a characteristic across a geographic space.
+
+sfdep
+
+# 3. Data
+
+## 3.1 Data Download & Import
+
+Let us first look at the data we are utilising to conduct this analysis.
+
+|                                                                            |                                                                                       |            |                |
+|----------------------------------------------------------------------------|---------------------------------------------------------------------------------------|------------|----------------|
+| Data Name                                                                  | Description                                                                           | Type       | Format         |
+| Dengue Daily                                                               | This data denotes the locations and time of each dengue incident in Taiwan.           | Geospatial | CSV            |
+| Historical map data of the village boundary (TWD97 longitude and latitude) | This data provides the internal and external boundary of Taiwan at the village level. | Geospatial | ESRI shapefile |
+
+: Overview Off Data Used
+
+## 3.2 Geospatial Data
+
+In this section, we will be importing and wrangling our data. We do this because data might not always be in the format that is suitable for our analysis, and hence, conversion to a suitable format is imperative.
+
+### 3.2.1 Import the data
+
+```{r}
+taiwan <- st_read(dsn = "data/geospatial",
+                   layer = "TAINAN_VILLAGE")
+```
+
+Let's look at the data to understand it better.
+
+```{r}
+head(taiwan)
+```
+
+```{r}
+class(taiwan)
+```
+
+We can see that the data is in a data frame of type sf. This data frame talks about [each village in Tainan city (in Taiwan)]{.underline}, and accompanying information like which county and town the village is in.
+
+Let's see how Tainan city in Taiwan looks like when it is divided by its villages. In this plot below, we see Taiwan divided by villages, and each color represents a different town that it is part of.
+
+```{r}
+tmap_mode("plot")
+qtm(taiwan, fill="TOWNID")
+```
+
+However, we only need towns D01, D02, D04, D06, D07, D08, D32 and D39.
+
+### 3.2.2 Data Filtering
+
+Let's now filter the rows in our Taiwan data frame to contain rows/villages from just these particular towns: D01, D02, D04, D06, D07, D08, D32 and D39.
+
+```{r}
+taiwan_filtered <- taiwan %>%
+  filter(TOWNID %in% c('D01', 'D02', 'D04', 'D06', 'D07', 'D08', 'D32', 'D39'))
+```
+
+Let's visualise the data again.
+
+```{r}
+tmap_mode("plot")
+qtm(taiwan_filtered, fill="TOWNID")
+```
+
+Here we see that we were successful in our filtering, we have got the villages just in the towns that we are interested in. This is a much smaller subset of the data we were working with, hopefully processing speeds would be higher too!
+
+### 3.2.3 Assessing Geometric Validity
+
+```{r}
+length(which(st_is_valid(taiwan_filtered) == FALSE))
+```
+
+0 means that none of our rows have invalid geometries and that we could move on peacefully.
+
+### 3.2.4 Missing values
+
+We want to check if there are any empty rows. Datasets can be huge and consequently, we could have many empty rows that is just a waste of memory and processing power. Removing them would be useful.
+
+Here's how we do it:
+
+```{r}
+# Use the filter function to check for empty rows
+empty_rows <- taiwan_filtered %>%
+  filter_all(all_vars(is.na(.)))
+
+# Check if there are any empty rows
+if (nrow(empty_rows) > 0) {
+  cat("There are empty rows in the sf data tibble.\n")
+} else {
+  cat("There are no empty rows in the sf data tibble.\n")
+}
+```
+
+Luckily, we have no empty rows either!
+
+### 3.2.5 Coordinate reference system
+
+```{r}
+st_crs(taiwan_filtered)
+```
+
+## 3.3 Aspatial Data
+
+### 3.3.1 Import the data
+
+Let's import the data.
+
+```{r}
+dengue <- read.csv("data/aspatial/Dengue_Daily.csv")
+
+```
+
+Let's explore how the data is like!
+
+```{r}
+head(dengue)
+```
+
+We realise that the columns are in Chinese, so let's translate them to english so that we can understand them better. I have used Google translate to individually translate each column to english
+
+```{r}
+new_names <- c("Onset_date", "judgement_date", "notification_date", "gender", "age_group", "country_city_residence", "residential_township", "residential_village", "min_stat_area", "min_stat_area_center_point_x", "min_stat_area_center_point_y", "first_level_stat_area", "second_level_stat_area", "infected_counties_cities", "infected_towns", "infected_villages",
+               "immigrant", "country_of_infection", "confirmed_cases_number", "village_residence_code", "infected_village_code", "serotype", "interior_county_city_ministry_code", "interior_residence_township_ministry_code", "interior_infection_county_ministry_code", 
+               "interior_infection_township_ministry_code"
+               )
+```
+
+```{r}
+names(dengue) <- new_names
+```
+
+Let's check if the translation has worked!
+
+```{r}
+names(dengue)
+```
+
+### 3.3.2 Conversion of data types
+
+The data type of all the fields in the data table is char, which doesn't make sense for numeric values such as the x&y coordinates and the onset date.
+
+Let's change the data type of onset date.
+
+In this code snippet, we convert onset date to a date datatype (it was char before). Then we create a new week column to detect the week of the onset date (we need it later to extract relevant weeks)
+
+```{r}
+dengue_new <- dengue
+dengue_new$Onset_date <- as.Date(dengue_new$Onset_date)
+
+dengue_new$week <- as.numeric(format(dengue_new$Onset_date, "%V"))
+```
+
+Let's convert data type of X and Y coordinates.
+
+However, I have noticed that some x and y coordinates are non numerical like "none" , and these will not be able to be converted. lets remove them first.
+
+```{r}
+dengue_new <- dengue_new %>%
+  filter(grepl("^[+-]?[0-9]*[.]?[0-9]+$", min_stat_area_center_point_x))
+```
+
+```{r}
+dengue_new <- dengue_new %>%
+  filter(grepl("^[+-]?[0-9]*[.]?[0-9]+$", min_stat_area_center_point_y))
+```
+
+Now let's do the conversion.
+
+```{r}
+dengue_new$min_stat_area_center_point_x <- as.numeric(dengue_new$min_stat_area_center_point_x)
+dengue_new$min_stat_area_center_point_y <- as.numeric(dengue_new$min_stat_area_center_point_y)
+```
+
+### 3.3.3 Check Missing Data
+
+```{r}
+dengue[rowSums(is.na(dengue))!=0,]
+```
+
+Thankfully we have no missing data! Let's proceed.
+
+```{r}
+dengue_before_geo <- dengue_new
+```
+
+### 3.3.4 Conversion of Lat/Long into Geometry
+
+We want to convert the lat long to a point so that we could conduct spatial point analysis!
+
+Now, let's do the conversion!
+
+```{r}
+dengue_new <- st_as_sf(dengue_new, coords = c("min_stat_area_center_point_x", "min_stat_area_center_point_y"), crs = 3824)
+```
+
+Let's look at our `dengue_new` now. it's indeed projected in TWD97 and that's what we wanted!
+
+```{r}
+st_geometry(dengue_new)
+```
+
+### 3.3.5 Extracting dengue cases from relevant weeks
+
+We are asked to extract dengue cases from only week 31 to week 50 of 2023. We do not need data from other time periods. So, let's do that!
+
+```{r}
+dengue_new <- dengue_new %>% filter(year(Onset_date) == 2023
+  & (week >=31 & week <= 50))
+dengue_before_geo <- dengue_before_geo %>% filter(year(Onset_date) == 2023
+  & (week >=31 & week <= 50))
+```
+
+### 3.3.6 Extracting dengue data in specific areas
+
+Our geospatial data, `taiwan_filtered,` provides the boundaries of villages in Tainan City in particular - not the whole of taiwan. And we had ``` taiwan_``filtered ``` created after selecting only a few towns in Tainan City. We need to make sure that the `dengue_new` data only corresponds to the areas defined in the ``` taiwan_``filtered ``` area.
+
+```{r}
+dengue_tainan <- st_intersection(taiwan_filtered, dengue_new)
+```
+
+```{r}
+tm_shape(taiwan_filtered) +
+  tm_polygons("TOWNID") +
+  tm_shape(dengue_tainan) +
+  tm_dots()
+```
+
+### 3.3.7 Examining dengue incidents /town
+
+By looking at our graphical analysis, we can tell that villages in Towns. D01, D08, D04 have a high density of dengue cases.
+
+Let's see if that is right by plotting the number of dengue incidents per TOWNID!
+
+```{r}
+dengue_summary <- dengue_tainan %>%
+  group_by(TOWNID) %>%
+  summarise(incidents = n(), .groups = 'drop')
+```
+
+Let's plot the results!
+
+```{r}
+ggplot(dengue_summary, aes(x = reorder(TOWNID, -incidents), y = incidents)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+  labs(x = "Town ID", y = "Number of Incidents", title = "Dengue Incidents by Town") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 65, hjust = 1))
+```
+
+Guess we weren't fully correct! The towns with the more incidents were D01, D06 and D39. But it is important to note that the top 5 towns have very similar number of incidents
+
+### 3.3.8 Examining dengue /village
+
+Now, let's examine the number of incidents per village. And since we already examined the number of incidents per town, let's **see if the villages with the highest number of incidents come from towns with the highest number of incidents!**
+
+::: callout-note
+This is very important to do so, so that we can make links between different facets of data - villages and towns and gain a better understanding of the geospatial distribution of the incidents.
+:::
+
+In this section, not only are we aiming to find the villages with the highest number of incidents, we are trying to link them to the town they are from.
+
+As our first task, let's map the villages to their town on our own.
+
+#### 3.3.8.1 Mapping town to village
+
+In our dengue_tainan data frame, each row corresponds to a particular incident of dengue in a particular point. There might be multiple points referring to the same village.
+
+We need to remove the geometry column for this so that we can remove the uniqueness for each row and can group all the same village ids together. To do so, we change the data type of dengue_tainan and store it in dengue_tainan_no_geom.
+
+```{r}
+dengue_tainan_no_geom <- st_set_geometry(dengue_tainan, NULL)
+```
+
+Now let's do the mapping between villagecode and townid.
+
+```{r}
+villcode_townid_mapping <- dengue_tainan_no_geom %>%
+  select(VILLCODE, TOWNID) %>%
+  distinct()
+
+head(villcode_townid_mapping)
+
+```
+
+We have done it!
+
+#### 3.3.8.1 Calculating top 10 villages
+
+Here we group by villcode so that we can get the number of incidents per village
+
+```{r}
+dengue_summary <- dengue_tainan %>%
+  group_by(VILLCODE) %>%
+  summarise(incidents = n(), .groups = 'drop')
+```
+
+Let's remove the geometry column here as well so that we can join it with the mapping we made above. We do this because we use left_join for combining the mapping with the number of incidents per village, and it does not allow us to have a geometry column
+
+```{r}
+dengue_summary  <- st_set_geometry(dengue_summary , NULL)
+```
+
+Now let's do the join.
+
+```{r}
+dengue_summary <- dengue_summary %>%
+  left_join(villcode_townid_mapping, by = "VILLCODE")
+
+```
+
+Let's now get the top 10 villages with the most number of incidents
+
+```{r}
+top_10_villages <- dengue_summary %>%
+  arrange(desc(incidents)) %>%
+  slice_max(order_by = incidents, n = 10)
+```
+
+Here, let's plot the number of incidents for the top 10 villages with the most incidents, in an ascending order. Each village will be uniquely colored based on the town it is from, so that we can make connections between the towns and villages with the most incidents.
+
+```{r}
+ggplot(top_10_villages, aes(x = reorder(VILLCODE, -incidents), y = incidents, fill = as.factor(TOWNID))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_viridis_d() + 
+  labs(title = "Top 10 Villages with Most Dengue Incidents",
+       x = "Village Code",
+       y = "Number of Incidents",
+       fill = "Town ID") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), # Improve x-axis label readability
+        legend.position = "bottom") # Adjust legend position
+
+```
+
+To analyse the graph above, let's refer to our previous chart depicting the towns with the most incidents.
+
+![](images/clipboard-77413975.png)
+
+From the first graph, we can see that the village with the most incidents is from D39, however, D39 isactually the town with the 3rd most number of incidents.
+
+But if D39 is a town with the 3rd most number of incidents, it is actually corroborated by the fact that in the first graph, 3 of the top 10 villages with the most incidents come from D39
+
+From the second graph, we can see that D06 is the town with the second most number of incidents, 4 of the top 10 villages with most incidents actually come from town D06, thus making the second graph make a lot of sense!
+
+What the interesting or controversial thing is, is that, D01 is said to be the town with the most number of incidents, but only one village from town D01 made it to the top 10 list! HMmm.. That means that multiple villages in D01 had a smaller number of incidents, whilst D36 maybe just had a select few villages with high number of cases.
+
+### 3.3.9 Examining dengue /village/week
+
+**Let us now see how many dengue incidents are there per week per village!**
+
+Let's group by the week and the village code, and then add it up to calculate the total number of incidents
+
+```{r}
+dengue_summary <- dengue_tainan %>%
+  group_by(VILLCODE, week) %>%
+  summarise(incidents = n(), .groups = 'drop')
+```
+
+```{r}
+head(dengue_summary)
+```
+
+There are many rows in this data table, so let's find out the particular weeks in specific villages that had the highest number of incidents.
+
+In this code snippet, we get sort the incident values in a descending order, then take the top 10 rows, and change the columns.
+
+```{r}
+top_10_incidents <- dengue_summary %>%
+  arrange(desc(incidents)) %>%
+  slice_max(order_by = incidents, n = 10) %>%
+  mutate(concatenated_vill_week = paste("vill", VILLCODE, "at week", week))
+
+```
+
+Let's plot it to see which weeks and villages had the most incidents
+
+```{r}
+ggplot(top_10_incidents, aes(x = concatenated_vill_week, y = incidents, fill = VILLCODE)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  labs(x = "Village Code and Week", y = "Number of Incidents", title = "Top 10 Dengue Incidents by Village and Week") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) 
+```
+
+I'll be deleting some variables to free some space
+
+```{r}
+rm(top_10_villages)
+```
+
+```{r}
+rm(villcode_townid_mapping)
+```
+
+Let's keep the data frame that stores the number of incidents per village per week
+
+```{r}
+dengue_summary <- dengue_tainan %>%
+  group_by(VILLCODE, week) %>%
+  summarise(incidents = n(), .groups = 'drop')
+```
+
+```{r}
+class(taiwan_filtered)
+```
+
+Let's left join this data set with all matching rows from the `taiwan_filtered` dataset based on the `villcode` column
+
+```{r}
+dengue_week_village <- dengue_before_geo %>%
+  group_by(residential_village,week) %>%
+  summarise(incidents = n(), .groups = 'drop')
+```
+
+I see a lot of null values so remove that
+
+```{r}
+dengue_week_village <- dengue_week_village %>%
+  filter(residential_village != "None")
+```
+
+The common column would be resdiential_village in dengue_week_village and VILLNAME in taiwan_filtered.
+
+So, let's rename residential_village to VILLNAME in dengue_week_village.
+
+```{r}
+dengue_week_village <- dengue_week_village %>%
+  rename(`VILLNAME` = residential_village
+      )
+```
+
+```{r}
+complete1 <- left_join(taiwan_filtered, dengue_week_village, by = "VILLNAME")
+```
+
+```{r}
+num_unique_villcode <- n_distinct(complete1$VILLCODE)
+num_unique_villname <- n_distinct(complete1$VILLNAME)
+```
+
+```{r}
+villeng_unique_villcode <- complete1 %>%
+  group_by(VILLENG) %>%
+  summarise(unique_villcode_count = n_distinct(VILLCODE), .groups = 'drop') %>%
+  filter(unique_villcode_count > 1)
+```
