@@ -1,0 +1,10 @@
+```{r}
+
+pacman::p_load(sf, tidyverse)
+taiwan <- st_read(dsn = "try2",
+                   layer = "hotosm_ind_east_populated_places_polygons")
+```
+
+```{r}
+plot(taiwan)
+```

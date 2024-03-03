@@ -12,7 +12,9 @@ In this take home exercise, our central subject of study would be Dengue.
 
 ## 1.1 What is Dengue?
 
-Dengue is a disease spread by mosquitoes, particularly, the female Aedes aegypti and Aedes albopictus mosquitoes, in tropical and subtropical regions like Taiwan. It is transmitted to humans through the bite of the aforementioned mosquitoes. When a mosquito bites a dengue-infected person, the mosquito is then infected. After approximately one week, the mosquito can then transmit the virus to other people they bite. It can result in sudden high fever, severe headache, joint pains and skin rashes.
+Dengue is a disease spread by mosquitoes, particularly, the female Aedes aegypti and Aedes albopictus mosquitoes, in tropical and subtropical regions like Taiwan. It is transmitted to humans th
+
+e-infected person, the mosquito is then infected. After approximately one week, the mosquito can then transmit the virus to other people they bite. It can result in sudden high fever, severe headache, joint pains and skin rashes.
 
 ## 1.2 Why Study It?
 
@@ -28,7 +30,7 @@ It can easily spread in areas in Taiwan due to the tropical climate, the high po
 In this section, I will be installing and loading R packages into our R environment to use them. I will also explain the utility of each package.
 
 ```{r}
-pacman::p_load(sf, tidyverse, tmap, sfdep)
+pacman::p_load(sf, tidyverse, tmap, sfdep,zoo, Kendall)
 ```
 
 *Sf*
@@ -271,7 +273,17 @@ dengue_before_geo <- dengue_before_geo %>% filter(year(Onset_date) == 2023
 Our geospatial data, `taiwan_filtered,` provides the boundaries of villages in Tainan City in particular - not the whole of taiwan. And we had ``` taiwan_``filtered ``` created after selecting only a few towns in Tainan City. We need to make sure that the `dengue_new` data only corresponds to the areas defined in the ``` taiwan_``filtered ``` area.
 
 ```{r}
-dengue_tainan <- st_intersection(taiwan_filtered, dengue_new)
+#dengue_tainan <- st_intersection(taiwan_filtered, dengue_new)
+```
+
+Let's write this to rds as it was a time consuming task and we do not want to execute this agaain.
+
+```{r}
+#write_rds(dengue_tainan, "../../data/rds/dengue_tainan.rds")
+```
+
+```{r}
+dengue_tainan <- read_rds("../../data/rds/dengue_tainan.rds")
 ```
 
 ```{r}
@@ -279,6 +291,7 @@ tm_shape(taiwan_filtered) +
   tm_polygons("TOWNID") +
   tm_shape(dengue_tainan) +
   tm_dots()
+
 ```
 
 ### 3.3.7 Examining dengue incidents /town
@@ -402,6 +415,14 @@ What the interesting or controversial thing is, is that, D01 is said to be the t
 
 ### 3.3.9 Examining dengue /village/week
 
+Let's get all the weeks for each village code. We have to use village code as the unique identifier as there are 258 unique village codes but 253 unique village names. That means, there are multiple village codes with the same village =eng, so it's important to disregard villageeng.
+
+So let's get all the weeks from 30-50 for each village code.
+
+```{r}
+villagecode_week_set <- expand.grid(VILLCODE = unique(taiwan_filtered$VILLCODE), week= seq(31,50))
+```
+
 **Let us now see how many dengue incidents are there per week per village!**
 
 Let's group by the week and the village code, and then add it up to calculate the total number of incidents
@@ -413,7 +434,12 @@ dengue_summary <- dengue_tainan %>%
 ```
 
 ```{r}
+dengue_pervillage_week <- dengue_summary
+```
+
+```{r}
 head(dengue_summary)
+
 ```
 
 There are many rows in this data table, so let's find out the particular weeks in specific villages that had the highest number of incidents.
@@ -437,65 +463,549 @@ ggplot(top_10_incidents, aes(x = concatenated_vill_week, y = incidents, fill = V
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) 
 ```
 
-I'll be deleting some variables to free some space
+We can see that `dengue_summary` does not have all the weeks for each unique `VILLCODE` . So we must ensure that the resulting data table has a row represnting each week for each village code.
+
+So we left join with the data frame with all the week-villagecode combinations so that all the ocmbinations will be included. The last line of code replaces week-villagecode combinations with no incidents as 0.
 
 ```{r}
-rm(top_10_villages)
+final_set<- left_join(villagecode_week_set, dengue_summary, by= c("VILLCODE", "week")) %>%
+  replace(is.na(.), 0)
 ```
 
 ```{r}
-rm(villcode_townid_mapping)
+final_set <- left_join(taiwan_filtered, final_set, by = c("VILLCODE"))
 ```
 
-Let's keep the data frame that stores the number of incidents per village per week
+Let's drop geometry.y as it refers to the dengue incident point, and we don't need that as we are looking at number of incidents per village per week
 
 ```{r}
-dengue_summary <- dengue_tainan %>%
-  group_by(VILLCODE, week) %>%
+final_set<- final_set %>%
+  select(-geometry.y)
+```
+
+### 3.8.9 Additional Data Wrangling
+
+Let's get the number of incidents per village
+
+```{r}
+dengue_per_village <- dengue_tainan %>%
+  group_by(VILLCODE) %>%
   summarise(incidents = n(), .groups = 'drop')
 ```
 
+As I am trying to investigate the number of incidents per week, i do not need the gemoetries of each individual point that have amalgamated into a multipoint. So, let's remove geome
+
 ```{r}
-class(taiwan_filtered)
+dengue_per_village  <- st_set_geometry(dengue_per_village , NULL)
 ```
 
-Let's left join this data set with all matching rows from the `taiwan_filtered` dataset based on the `villcode` column
+Let's perform left join.
 
 ```{r}
-dengue_week_village <- dengue_before_geo %>%
-  group_by(residential_village,week) %>%
-  summarise(incidents = n(), .groups = 'drop')
-```
-
-I see a lot of null values so remove that
-
-```{r}
-dengue_week_village <- dengue_week_village %>%
-  filter(residential_village != "None")
-```
-
-The common column would be resdiential_village in dengue_week_village and VILLNAME in taiwan_filtered.
-
-So, let's rename residential_village to VILLNAME in dengue_week_village.
-
-```{r}
-dengue_week_village <- dengue_week_village %>%
-  rename(`VILLNAME` = residential_village
-      )
+tryNow <- left_join(taiwan_filtered, dengue_per_village, by = c("VILLCODE"))
 ```
 
 ```{r}
-complete1 <- left_join(taiwan_filtered, dengue_week_village, by = "VILLNAME")
+tmap_mode("plot")
+tm_shape(tryNow) +
+  tm_fill(col = "incidents",
+          style = "quantile",
+          palette = "Purples",
+          title = "Number of Dengue Cases") +
+  tm_layout(main.title = "Number of Dengue Cases",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.4,
+            legend.width = 0.3,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_scale_bar()
+```
+
+# 4. Global Measures of Spatial Association
+
+In statstics, we are interested to find out if the observed distribution follows normal distribution. we need to go beyond EDA and actually confirm that the distribution follows normal distribution.
+
+To confirm normal distribution, we need to conduct a formal statistical test.
+
+Before we can conduct statistical test, we need to understand how spatial relationships between geographical areas can be defined mathematically. And this is known as spatial weights
+
+## 4.1 Calculating Contiguity Weights: Queen's method
+
+Here we are trying to determine the neighbours of each village, and then we are determining how much each neighbour could affect the focus location (through weights)
+
+When doing it, i got an error that there were NA values. When we looked at our tryNow data frame, there was a column called Note with only NA values.
+
+Hence, let's remove that.
+
+```{r}
+tryNow <- tryNow %>%
+  select(-NOTE)
 ```
 
 ```{r}
-num_unique_villcode <- n_distinct(complete1$VILLCODE)
-num_unique_villname <- n_distinct(complete1$VILLNAME)
+tryNow <- tidyr::drop_na(tryNow)
+
+```
+
+Now, let's calculate the weights of neighbouring villages of each focal village.
+
+```{r}
+wm_q <- tryNow %>%
+  mutate(nb = st_contiguity(geometry),
+         wt = st_weights(nb,
+                         style = "W"),
+         .before = 1)
 ```
 
 ```{r}
-villeng_unique_villcode <- complete1 %>%
-  group_by(VILLENG) %>%
-  summarise(unique_villcode_count = n_distinct(VILLCODE), .groups = 'drop') %>%
-  filter(unique_villcode_count > 1)
+wm_q
 ```
+
+Let's understand this. We can see that there is a list of neighbours for each village. For example, the first village has neighbours 6, 118, 160. And each of the neighbours had equal weight, with each neighbour having the same influence over the village
+
+## 4.2 **Computing Global Moran’ I**
+
+**What is Global Moran' I?**
+
+Global Moran's I is a statistical measure used to assess spatial autocorrelation in data measured across a geographic area. We are trying to assess whether similar values cluster close together, or are further away.
+
+Value's meaning:
+
+1.  A **positive value** indicates **positive spatial correlation** and that similar values cluster together.
+2.  A **negative value** indicates **negative spatial correlation** and that similar values being spatially apart.
+3.  A value **near zero** implies a **random spatial distribution** of the values, showing no significant autocorrelation
+
+```{r}
+moranI <- global_moran(wm_q$incidents,
+                       wm_q$nb,
+                       wm_q$wt)
+glimpse(moranI)
+```
+
+The Global Moran's I statistic was 0.464. This suggests a positive spatial autocorrelation. This means that similar values of **`incidents`** tend to be clustered together geographically in your dataset.
+
+Not only do we Global Moran's I statistic, we want to assess the statistical significance of the Moran's I statistic if the spatial pattern is unlikely to have occurred by chance.
+
+## 4.3 **Performing Global Moran's I test**
+
+```{r}
+global_moran_test(wm_q$incidents,
+                       wm_q$nb,
+                       wm_q$wt)
+```
+
+Based on analysis result, sicne p value which is 2.2e-16 and is much lower than the confidence interval value of 0.05, we have enough statistical evidence to reject the null hypothesis that states that points are randomly distributed. It allows us to infer that the distribution resembles clustering because the Moran I value was over 0.4.
+
+As it is 0. we can infer there is clustering, but the value is not tool large- so there is clustering but at very distinct places. So we need to execute local moran to detect the specific areas with hotspots/coldspots , clusters and outliers.
+
+## 4.4 **Performing Global Moran's permutation test**
+
+We do this to double confirm that there indeed is clustering and that the incidents of dengue are not randomly distributed. We do this through [monte carlo simulations]{.underline}**.**
+
+**How are Monte Carlo Simulations conducted?**
+
+1.  **Start with Real Spatial Data**: We have a map with data points, each representing a value of interest, like dengue incidents in different villages.
+
+2.  **The Question**: We want to know if dengue incidents in one village are related to high dengue incidents in neighboring village (positive spatial autocorrelation), or if it's just random.
+
+3.  **Creating a Simulated World**:
+
+```         
+-   Imagine we take the map and erase all the dengue incidents data.
+
+-   Then, we redistribute those dengue incidents data randomly across the map. This means we're shuffling the data points so they no longer have their original spatial pattern. Each village gets a dengue incidents data, but now it's randomly assigned, not based on the real-world data.
+```
+
+4.  **Calculating Moran's I for the Simulated World**:
+
+```         
+1.  WE do simulations (which represent a world of randomness without any spatial pattern),
+
+2.  With this shuffled map, we calculate Moran's I, a statistic that measures how much the dengue incidents data in one village is similar to the rates in nearby villages.
+
+3.  This calculation gives us a sense of whether the shuffled (randomized) data still shows any pattern of similar values being close together.
+```
+
+5.  **Repeat the Simulation Multiple Times**:
+
+    -   We don't do this process just once. We repeat it many times, each time reshuffling the data and calculating a new Moran's I.
+
+    -   This creates a bunch of Moran's I values from worlds that are similar to ours but with randomized crime rates.
+
+6.  **Compare the Real World to the Simulated Worlds**:
+
+```         
+-   Now, we compare the Moran's I you calculated from your real data to the range of Moran's I values you got from your simulations.
+
+-   If the real Moran's I is much higher than what we mostly see in the simulations, it suggests that the pattern in your real data is not random; it's statistically significant.
+```
+
+7.  It is alway a good practice to use `set.seed()` before performing simulation. This is to ensure that the computation is reproducible.
+
+```{r}
+set.seed(1234)
+```
+
+Next, `global_moran_perm()` is used to perform Monte Carlo simulation.
+
+```{r}
+global_moran_perm(wm_q$incidents,
+                       wm_q$nb,
+                       wm_q$wt,
+                  nsim = 99)
+```
+
+In the context of Monte Carlo simulations, the rank of the observed Moran's I value (0.46439) among the Moran's I values generated from the simulated random datasets indicates its position. A rank of 100 out of 100 means that the observed Moran's I was the highest among all simulated values, suggesting that the observed spatial autocorrelation is exceptionally strong compared to what would be expected by chance.
+
+The very low p value also allows us to reject the null hypothesis and deduce that the spatial autocorrelation is unlikely to have occurred by chance.
+
+We can infer that the spatial distribution shows sign of clustering.
+
+Now, let's use local moran to identify areas where clustering occurred.
+
+## 4.5 **Computing local Moran’s I**
+
+```{r}
+lisa <- wm_q %>% 
+  mutate(local_moran = local_moran(
+    incidents, nb, wt, nsim = 99),
+         .before = 1) %>%
+  unnest(local_moran)
+```
+
+### 4.5.1 **Visualisng local Moran’s I**
+
+Let's visualise!
+
+```{r}
+tmap_mode("plot")
+tm_shape(lisa) +
+  tm_fill("ii") + 
+  tm_borders(alpha = 0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "local Moran's I of incidents",
+            main.title.size = 0.8)
+```
+
+Let's analyse this visualisation.
+
+**The dark green areas** that also surrounded by dark green or lighter green areas have high local moran's i values, indicating strong spatial correlation, and that these areas and immediate neighbours have similarly high values.
+
+The same middle part also has many **orange areas**, that have low local moran's I values. This means that there is a stark difference between the number of dengue incidents there compared to villages near it - and *this makes sense.*
+
+From our first map, we know that the middle area is concentrated with dengue incidents.
+
+The middle area is so dense with packed with many small small villages. It makes sense that some villages would be concentrated with incidents, and another village right next to it might not, and this can result in a stark difference in a stark difference in value and negative local moran.
+
+### 4.5.1 **Visualisng p value of local Moran’s I**
+
+```{r}
+tmap_mode("plot")
+tm_shape(lisa) +
+  tm_fill("p_ii_sim") + 
+  tm_borders(alpha = 0.5) +
+   tm_layout(main.title = "p-value of local Moran's I",
+            main.title.size = 0.8)
+```
+
+**Light Brown Areas** : These areas have low p-values, indicating that the Local Moran's I values for these areas are statistically significant. The closer the p-value is to 0, the stronger the evidence against the null hypothesis (which states that there is no spatial autocorrelation). Thus, areas in this range are likely to represent significant spatial clusters or outliers.
+
+**Darker Brown Areas** : As the colors get darker (moving towards the 1.0 end of the scale), the p-values increase, suggesting weaker evidence against the null hypothesis. Areas with p-values closer to 1.0 suggest that the local spatial patterns might be due to random chance rather than a significant spatial process.
+
+### 4.5.2 **Visuaising local Moran’s I and p-value**
+
+```{r}
+tmap_mode("plot")
+map1 <- tm_shape(lisa) +
+  tm_fill("ii") + 
+  tm_borders(alpha = 0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "local Moran's I of GDPPC",
+            main.title.size = 0.8)
+
+map2 <- tm_shape(lisa) +
+  tm_fill("p_ii",
+          breaks = c(0, 0.001, 0.01, 0.05, 1),
+              labels = c("0.001", "0.01", "0.05", "Not sig")) + 
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "p-value of local Moran's I",
+            main.title.size = 0.8)
+
+tmap_arrange(map1, map2, ncol = 2)
+```
+
+## 4.6 **Visualising LISA map**
+
+Let's plot the LISA map to check for of outliers and clusters.
+
+```{r}
+lisa_sig <- lisa  %>%
+  filter(p_ii < 0.05)
+tmap_mode("plot")
+tm_shape(lisa) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+tm_shape(lisa_sig) +
+  tm_fill("mean") + 
+  tm_borders(alpha = 0.4)
+```
+
+This again corroborates with our first map that shows the distribution of dengue cases , and the area around the middle part having high number of cases can be likened to the high-high villages around the middle of the city.
+
+## 4.7 **Hot Spot and Cold Spot Area Analysis (HCSA)**
+
+HCSA uses spatial weights to identify locations of statistically significant hot spots and cold spots in an spatially weighted attribute that are in proximity to one another based on a calculated distance. The analysis groups features when similar high (hot) or low (cold) values are found in a cluster. The polygon features usually represent administration boundaries or a custom grid structure.
+
+### 4.7.1 Computing Local Gi\* Statistics
+
+```{r}
+tryNow1 <- tryNow %>%
+  filter(!is.na(incidents))
+```
+
+We will need to derive a spatial weight matrix before we can compute local Gi\* statistics.
+
+It specifies which areas are neighbors and how strongly they should be weighted based on distance.
+
+High positive Gi∗​ values indicate a clustering of high values (hotspots), while low negative Gi∗​ values indicate a clustering of low values (coldspots).
+
+```{r}
+wm_idw <- tryNow1 %>%
+  mutate(nb = st_contiguity(geometry),
+         wts = st_inverse_distance(nb, geometry,
+                                   scale = 1,
+                                   alpha = 1),
+         .before = 1)
+```
+
+Now we are calculating the Local GI\* Statistic
+
+```{r}
+
+HCSA <- wm_idw %>% 
+  mutate(local_Gi = local_gstar_perm(
+    incidents, nb, wt, nsim = 99),
+         .before = 1) %>%
+  unnest(local_Gi)
+HCSA
+```
+
+Let's visualise it!
+
+```{r}
+tmap_mode("plot")
+tm_shape(HCSA) +
+  tm_fill("gi_star") + 
+  tm_borders(alpha = 0.5) +
+  tm_view(set.zoom.limits = c(6,8))
+```
+
+Let's also add the first map that showed the distribution of the dengue incidents to understand the HCSA map better:
+
+![](images/clipboard-57072497.png)
+
+**Dark Red villages :**
+
+These are likely the coldspots, areas where the local ∗Gi∗​ values are significantly lower than the mean, indicating a clustering of low values.
+
+This makes sense when we see the purple distribution map that shows how the outer areas have the lowest number of dengue cases, and they are all near each other.
+
+**Dark green and Green Villages (2-6) :**
+
+These are the villages around the middle of the city that are hotspots, where the local Gi\* values are significantly higher than the mean, meanning that there is a clustering of high values which is corroborated by the purple graph too. In the area around the middle of the city, multiple villages close together have high number of dengue cases.
+
+------------------------------------------------------------------------
+
+Here we have done Hot spot cold spot analysis and calculated Gi\* values **without taking time into consideration**. We do not consider how many dengue incidents happened per week per village, but considered just the number of incidents per village in totaily.
+
+# Creating a Time Series Cube
+
+Here we will create a time series cube to show the number of dengue incidents per week per village.
+
+First, let's remove the columns with all the NAs, which is NOTE.
+
+```{r}
+taiwan_filtered1 <- taiwan_filtered %>%
+  select(-NOTE)
+taiwan_filtered1 <- tidyr::drop_na(taiwan_filtered1)
+```
+
+Now let's see the number of dengue incidents per village per week. As we do not need this to be spatial data, let's remove the geometry call.
+
+```{r}
+head(dengue_pervillage_week)
+```
+
+```{r}
+dengue_pervillage_week  <- st_set_geometry(dengue_pervillage_week , NULL)
+```
+
+We can see that not every village has every week, so let's create that.
+
+We have created a data frame previously where each village code has a corresponding week from 31-50. Let's see that
+
+```{r}
+head(villagecode_week_set)
+```
+
+Now let's combine the villagecode_week_set with the actual number of incidents per week per village. And the weeks that do not have any incidents will be kept as 0.
+
+```{r}
+final_set1 <- left_join(villagecode_week_set
+, dengue_pervillage_week, by = c("VILLCODE", "week")) %>%
+  replace(is.na(.), 0)  # Replace NA values with 0
+```
+
+Let's double check to see that all villages in taiwan_filtered(Geospatial data) are in our dengue (aspatial data)
+
+```{r}
+extra_observation <- anti_join(taiwan_filtered1, final_set1, by = "VILLCODE")
+```
+
+```{r}
+class(final_set1)
+class(taiwan_filtered1)
+```
+
+This is not a tibble data frame as said by prof in piazza. So,
+
+```{r}
+final_set1 <- as.tibble(final_set1)
+class(final_set1)
+```
+
+```{r}
+dengue_st <- spacetime(final_set1, taiwan_filtered1
+                       ,
+                      .loc_col = "VILLCODE",
+                      .time_col = "week")
+```
+
+```{r}
+is_spacetime_cube(dengue_st)
+```
+
+## **Computing Gi\***
+
+Next, we will compute the local Gi\* statistics, but this time taking the number of incidents, per village ,per week - **its a temporal analysis as well.**
+
+### **Deriving the spatial weights**
+
+The code chunk below will be used to identify neighbors and to derive an inverse distance weights.
+
+```{r}
+dengue_st_nb <- dengue_st %>%
+  activate("geometry") %>%
+  mutate(nb = include_self(st_contiguity(geometry)),
+         wt = st_inverse_distance(nb, geometry,
+                                  scale = 1,
+                                  alpha = 1),
+         .before = 1) %>%
+  set_nbs("nb") %>%
+  set_wts("wt")
+```
+
+Note that this dataset now has neighbors and weights for each time-slice.
+
+```{r}
+head(dengue_st_nb)
+```
+
+This lists the neighbours of each village, and the spatial weight of each village.
+
+## **Computing Gi\***
+
+We can use these new columns to manually calculate the local Gi\* for each village. We can do this by grouping by *week* and using `local_gstar_perm()` of sfdep package. After which, we `use unnest()` to unnest *gi_star* column of the newly created *gi_starts* data.frame.
+
+```{r}
+gi_stars <- dengue_st_nb %>% 
+  group_by(week) %>% 
+  mutate(gi_star = local_gstar_perm(
+    incidents, nb, wt)) %>% 
+  tidyr::unnest(gi_star)
+```
+
+```{r}
+# Inspect the structure of 'nb' to ensure it's a valid neighbors list
+str(dengue_st_nb$nb)
+```
+
+# **Mann-Kendall Test**
+
+The Mann-Kendall Test is a non-parametric statistical test used to identify trends in a dataset without assuming the data follows a specific distribution.
+
+It tests for an upward or downward trend in a time series dataset.
+
+The test determines whether the observed sum of scores is significantly different from what would be expected by chance, indicating a trend.
+
+With these Gi\* measures we can then evaluate each location for a trend using the Mann-Kendall test. The code chunk below uses Changsha county.
+
+```{r}
+cbg <- gi_stars %>% 
+  ungroup() %>% 
+  filter(VILLCODE == "67000350050") |> 
+  select(VILLCODE, week, gi_star)
+```
+
+```{r}
+ggplot(data = cbg, 
+       aes(x = week, 
+           y = gi_star)) +
+  geom_line() +
+  theme_light()
+```
+
+The peaks, where the ∗G\*∗ values rise above 1, suggest potential hotspots. This could mean that during these weeks, the village represented by **`VILLCODE = "67000350050"`** was experiencing higher than usual dengue incidence relative to its neighbors.
+
+Conversely, when the ∗G\*∗ values dip below -1, this could be indicative of coldspots. It could imply that during these weeks, the village had lower dengue incidence relative to its neighbors.
+
+Most of the time, until about week 47, the ∗G\*∗ values were always above 1, indicaitng that there were more dengue incidents in this village compared to the other villages most of the time.
+
+And this is corroborated by the fact that is village is from D06, which we can see is the town with the second most incidents from the graph below.
+
+We can also see that it is the village with the second most number of incidents from the data frame dengue_per_village
+
+There are two prominent peaks after the midpoint of the 20 week period, indicating that there were more dengue incidents in this village compared to the other villages in that time period.
+
+![](images/clipboard-1535541130.png)
+
+## **Performing Emerging Hotspot Analysis**
+
+Lastly, we will perform EHSA analysis by using [`emerging_hotspot_analysis()`](https://sfdep.josiahparry.com/reference/emerging_hotspot_analysis.html) of sfdep package. It takes a spacetime object x , and the quoted name of the variable of interest for .var argument. The k argument is used to specify the number of time lags which is set to 1 by default. Lastly, nsim map numbers of simulation to be performed.
+
+```{r}
+#ehsa <- emerging_hotspot_analysis(
+  #x = dengue_st, 
+  #.var = "incidents", 
+  #k = 1, 
+  #nsim = 99
+#)
+```
+
+```{r}
+#write_rds(ehsa, "../../data/rds/ehsa.rds")
+```
+
+```{r}
+ehsa <- read_rds("../../data/rds/ehsa.rds")
+```
+
+### **Visualising the distribution of EHSA classes**
+
+In the code chunk below, ggplot2 functions ised used to reveal the distribution of EHSA classes as a bar chart.
+
+```{r}
+library(ggplot2)
+library(stringr) # for str_wrap function
+
+ggplot(data = ehsa, aes(x = classification)) +
+  geom_bar() +
+  theme_light() +
+  theme(axis.text.x = element_text(size = 8, angle = 0, hjust = 0.5, vjust = 0.5)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) # Adjust 'width' as needed
+
+
+```
+
+Here, there are a high number of oscillating hotspots. These locations alternate being hotspots and coldspots during different time periods. For example a village with the villagecode 67000330004 is like so.
