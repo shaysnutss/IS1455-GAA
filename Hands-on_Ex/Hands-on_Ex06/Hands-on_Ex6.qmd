@@ -1,5 +1,5 @@
-                                                        ---
-title: "In class ex 06"
+---
+title: "Hands on 06"
 
 execute: 
   warning: false
@@ -8,7 +8,7 @@ date: "`r Sys.Date()`"
 ---
 
 ```{r}
-pacman::p_load(sp, spdep, tmap, sf, ClustGeo, 
+pacman::p_load(sp, rgdal, spdep, tmap, sf, ClustGeo, 
                ggpubr, cluster, factoextra, NbClust,
                heatmaply, corrplot, psych, tidyverse, GGally)
 ```
@@ -87,6 +87,70 @@ ggplot(data=ict_derived,
                fill="light blue")
 ```
 
+```{r}
+ggplot(data=ict_derived, 
+       aes(x=`RADIO_PR`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue")
+```
+
+```{r}
+ggplot(data=ict_derived, 
+       aes(x=`RADIO_PR`)) +
+  geom_boxplot(color="black", 
+               fill="light blue")
+
+```
+
+The code chunks below are used to create the data visualisation. They consist of two main parts. First, we will create the individual histograms using the code chunk below.
+
+```{r}
+radio <- ggplot(data=ict_derived, 
+             aes(x= `RADIO_PR`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue")
+
+tv <- ggplot(data=ict_derived, 
+             aes(x= `TV_PR`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue")
+
+llphone <- ggplot(data=ict_derived, 
+             aes(x= `LLPHONE_PR`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue")
+
+mphone <- ggplot(data=ict_derived, 
+             aes(x= `MPHONE_PR`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue")
+
+computer <- ggplot(data=ict_derived, 
+             aes(x= `COMPUTER_PR`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue")
+
+internet <- ggplot(data=ict_derived, 
+             aes(x= `INTERNET_PR`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue")
+```
+
+Next, the [*ggarrange()*](https://rpkgs.datanovia.com/ggpubr/reference/ggarrange.html) function of [**ggpubr**](https://rpkgs.datanovia.com/ggpubr/) package is used to group these histograms together.
+
+```{r}
+ggarrange(radio, tv, llphone, mphone, computer, internet, 
+          ncol = 3, 
+          nrow = 2)
+```
+
 ### **12.5.2 EDA using choropleth map**
 
 #### 12.5.2.1 Joining geospatial data with aspatial data
@@ -99,11 +163,11 @@ The code chunks below is used to perform the task. The unique identifier used to
 shan_sf <- left_join(shan_sf, 
                      ict_derived, by=c("TS_PCODE"="TS_PCODE"))
   
-#write_rds(shan_sf, "data/rds/shan_sf.rds")
+write_rds(shan_sf, "data/rds/shan_sf.rds")
 ```
 
 ```{r}
-shan_sf <- read_rds("data/rds/shan_sf.rds")
+#shan_sf <- read_rds("data/rds/shan_sf.rds")
 ```
 
 #### 12.5.2.2 Preparing a choropleth map
@@ -140,6 +204,15 @@ tmap_arrange(TT_HOUSEHOLDS.map, RADIO.map,
 Notice that the choropleth maps above clearly show that townships with relatively larger number ot households are also showing relatively higher number of radio ownership.
 
 Now let us plot the choropleth maps showing the dsitribution of total number of households and Radio penetration rate by using the code chunk below.
+
+```{r}
+tm_shape(shan_sf) +
+    tm_polygons(c("TT_HOUSEHOLDS", "RADIO_PR"),
+                style="jenks") +
+    tm_facets(sync = TRUE, ncol = 2) +
+  tm_legend(legend.position = c("right", "bottom"))+
+  tm_layout(outer.margins=0, asp=0)
+```
 
 ## **12.6 Correlation Analysis**
 
@@ -206,6 +279,67 @@ Z-score standardisation can be performed easily by using *scale()* of Base R. Th
 ```{r}
 shan_ict.z <- scale(shan_ict)
 describe(shan_ict.z)
+```
+
+### **12.7.5 Visualising the standardised clustering variables**
+
+Beside reviewing the summary statistics of the standardised clustering variables, it is also a good practice to visualise their distribution graphical.
+
+The code chunk below plot the scaled *Radio_PR* field.
+
+```{r}
+r <- ggplot(data=ict_derived, 
+             aes(x= `RADIO_PR`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue") +
+  ggtitle("Raw values without standardisation")
+
+shan_ict_s_df <- as.data.frame(shan_ict.std)
+s <- ggplot(data=shan_ict_s_df, 
+       aes(x=`RADIO_PR`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue") +
+  ggtitle("Min-Max Standardisation")
+
+shan_ict_z_df <- as.data.frame(shan_ict.z)
+z <- ggplot(data=shan_ict_z_df, 
+       aes(x=`RADIO_PR`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, s, z,
+          ncol = 3,
+          nrow = 1)
+```
+
+```{r}
+r <- ggplot(data=ict_derived, 
+             aes(x= `RADIO_PR`)) +
+  geom_density(color="black",
+               fill="light blue") +
+  ggtitle("Raw values without standardisation")
+
+shan_ict_s_df <- as.data.frame(shan_ict.std)
+s <- ggplot(data=shan_ict_s_df, 
+       aes(x=`RADIO_PR`)) +
+  geom_density(color="black",
+               fill="light blue") +
+  ggtitle("Min-Max Standardisation")
+
+shan_ict_z_df <- as.data.frame(shan_ict.z)
+z <- ggplot(data=shan_ict_z_df, 
+       aes(x=`RADIO_PR`)) +
+  geom_density(color="black",
+               fill="light blue") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, s, z,
+          ncol = 3,
+          nrow = 1)
 ```
 
 ### **12.7.6 Computing proximity matrix**
@@ -401,15 +535,23 @@ shan_sp <- as_Spatial(shan_sf)
 Next, poly2nd() of **spdep** package will be used to compute the neighbours list from polygon list.
 
 ```{r}
-shan.nb <- poly2nb(shan_sf)
+shan.nb <- poly2nb(shan_sp)
 summary(shan.nb)
 ```
 
 We can plot the neighbours list on shan_sp by using the code chunk below. Since we now can plot the community area boundaries as well, we plot this graph on top of the map. The first plot command gives the boundaries. This is followed by the plot of the neighbor list object, with coordinates applied to the original SpatialPolygonDataFrame (Shan state township boundaries) to extract the centroids of the polygons. These are used as the nodes for the graph representation. We also set the color to blue and specify add=TRUE to plot the network on top of the boundaries.
 
 ```{r}
+class(shan_sp)
+```
+
+```{r}
+class(shan.nb)
+```
+
+```{r}
 plot(shan_sp, 
-     border=grey(.5))
+     border=grey(0.5))
 plot(shan.nb, 
      coordinates(shan_sp), 
      col="blue", 
