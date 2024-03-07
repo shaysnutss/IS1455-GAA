@@ -65,7 +65,7 @@ sfdep
 Let us first look at the data we are utilising to conduct this analysis.
 
 |                                                                            |                                                                                       |            |                |
-|----------------------------------------------------------------------------|---------------------------------------------------------------------------------------|------------|----------------|
+|-------------------|-----------------------|---------------|---------------|
 | Data Name                                                                  | Description                                                                           | Type       | Format         |
 | Dengue Daily                                                               | This data denotes the locations and time of each dengue incident in Taiwan.           | Geospatial | CSV            |
 | Historical map data of the village boundary (TWD97 longitude and latitude) | This data provides the internal and external boundary of Taiwan at the village level. | Geospatial | ESRI shapefile |
