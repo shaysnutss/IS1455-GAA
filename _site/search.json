@@ -96,5 +96,12 @@
     "title": "Take-home Exercsie 3 - Distribution of healthcare facilities in Cambodia",
     "section": "UI of my screens",
     "text": "UI of my screens\nThis is the screen for exploratory data analysis. When entering the page, they will see data pertaining to the whole of Cambodia. Then, the user will be able to select what province they want explore, and then their options for district will be filtered according to the province they selected (only districts in that province will be shown). Similarly, when they select a district, only communes of that district will be shown for the commune section - and same for village with regards to the commune chosen.\nThey will be able to see two types of maps to understand the distribution of hospital facilities more - spatial points and choropleth maps. They will also be able to see the types of facilities in their chosen area. So, this is the screen users will see when they choose spatial point maps.\n\nThis is what the user will see when they choose to see choropleth maps. They will have more filters when they chose to do this. They can choose the type of grouping in data (jenkins, quartile etc) and the color theme of their liking"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "IS1455-GAA",
+    "section": "",
+    "text": "Welcome to IS415 Geospatial Analytics and Applications.\nThis is the course website of the IS415 mod that I am embarking on this semester. You will find my course materials here. Have fun:)"
   }
 ]

@@ -1,7 +1,854 @@
 ---
-title: "Take home Exercise 3: Distribution of healthcare facilities in Cambodia"
-
+title: "Take-home Exercsie 3 - Distribution of healthcare facilities in Cambodia"
 execute: 
   warning: false
 date: "`r Sys.Date()`"
+highlight-style: dracula
 ---
+
+For my project, we will be exploring the distribution of healthcare facilities in Cambodia. My team consists of ViddyaSri and I, and I will be focusing on the exploratory data analysis portion of the project.
+
+In this take home exercise, I will be writing down all the codes needed to derive the maps to be plotted in the final Shiny application. I will also be attaching the UI prototype.
+
+# Installing and Loading R Packages
+
+These are the packages I would need.
+
+```{r}
+pacman::p_load(sf, tidyverse, tmap, raster, spatstat, maptools, spNetwork, classInt, viridis, arrow, lubridate, dplyr, sfdep)
+```
+
+# `Data`
+
+## Overview of data used
+
+### Boundary data
+
+We have different levels of the boundary data.
+
+| Name     | Description                                                   | Type |
+|------------|-------------------------------------------------|------------|
+| KHM_adm1 | This data shows the entirety of Cambodia, split by provinces. | shp  |
+| KHM_adm2 | This data shows the entirety of Cambodia, split by districts. | shp  |
+| KHM_adm3 | This data shows the entirety of Cambodia, split by communes.  | shp  |
+| KHM_adm4 | This data shows the entirety of Cambodia, split by villages.  | shp  |
+
+### Healthcare data
+
+We have different levels of the boundary data.
+
+| Name              | Description                                                                       | Type |
+|------------|------------------------------------------------|------------|
+| Health center     | This data shows the distribution of health center facilities across Cambodia.     | shp  |
+| Health post       | This data shows the distribution of health post facilities across Cambodia.       | shp  |
+| National hospital | This data shows the distribution of national hospital facilities across Cambodia. | shp  |
+| Referral Hospital | This data shows the distribution of referral hospital facilities across Cambodia. | shp  |
+
+### Roads
+
+| Name  | Description                                   | Type |
+|-------|-----------------------------------------------|------|
+| Roads | This shows the various roads around Cambodia. | gpkg |
+
+## Boundary Data
+
+Let's import the data now.
+
+### Importing boundary data
+
+::: panel-tabset
+## Province Layer
+
+```{r}
+province_sf <- st_read(dsn = "data/boundary/level1", 
+                layer = "KHM_adm1")
+```
+
+## District Layer
+
+```{r}
+district_sf <- st_read(dsn = "data/boundary/level2", 
+                layer = "KHM_adm2")
+```
+
+## Commune Layer
+
+```{r}
+commune_sf <- st_read(dsn = "data/boundary/level3", 
+                layer = "KHM_adm3")
+```
+
+## Village Layer
+
+```{r}
+village_sf <- st_read(dsn = "data/boundary/level4", 
+                layer = "KHM_adm4")
+```
+:::
+
+### Handle Invalid Geometry
+
+::: panel-tabset
+## Province
+
+```{r}
+length(which(st_is_valid(province_sf) == FALSE))
+```
+
+There are no invalid geometries!
+
+## District
+
+```{r}
+length(which(st_is_valid(district_sf) == FALSE))
+```
+
+There are no invalid geometries.
+
+## Commune
+
+```{r}
+length(which(st_is_valid(commune_sf) == FALSE))
+```
+
+## Village
+
+```{r}
+length(which(st_is_valid(village_sf) == FALSE))
+```
+:::
+
+Luckily we have no invalid geometries for the boundary layer.
+
+### Projection of Data
+
+::: panel-tabset
+## Province Layer
+
+```{r}
+province_sf <- st_transform(province_sf, 32648)
+st_crs(province_sf)
+```
+
+## District Layer
+
+```{r}
+district_sf <- st_transform(district_sf, 32648)
+st_crs(district_sf)
+```
+
+## Commune Layer
+
+```{r}
+commune_sf <- st_transform(commune_sf, 32648)
+st_crs(commune_sf)
+```
+
+## Village Layer
+
+```{r}
+village_sf <- st_transform(village_sf, 32648)
+st_crs(village_sf)
+```
+:::
+
+### Plotting Of Data
+
+Let's plot the data!
+
+::: panel-tabset
+Here we plot how Cambodia divided by provinces, districts, communes and villages look like
+
+## Province
+
+```{r}
+tmap_mode('plot')
+tm_shape(province_sf) + 
+  tm_polygons(col = "#F0E1D7", alpha = 0.5)
+```
+
+## District
+
+```{r}
+tmap_mode('plot')
+tm_shape(district_sf) + 
+  tm_polygons(col = "#F0E1D7", alpha = 0.5)
+```
+
+## Commune
+
+```{r}
+tmap_mode('plot')
+tm_shape(commune_sf) + 
+  tm_polygons(col = "#F0E1D7", alpha = 0.5)
+```
+
+## Village
+
+```{r}
+tmap_mode('plot')
+tm_shape(village_sf) + 
+  tm_polygons(col = "#F0E1D7", alpha = 0.5)
+```
+:::
+
+### Creating Cambodia boundary
+
+```{r}
+cambodia_sf <- province_sf %>%
+  st_union() 
+```
+
+```{r}
+plot(cambodia_sf, main = "Cambodia Boundary Layer")
+```
+
+## Healthcare Data
+
+### Importing healthcare data
+
+::: panel-tabset
+## healthpost
+
+```{r}
+points_healthpost <- st_read(dsn = "data/healthpost", 
+                layer = "healthpost")
+```
+
+## healthcenter
+
+```{r}
+points_healthcenter <- st_read(dsn = "data/healthcenter", 
+                layer = "healthcenter")
+```
+
+## national hospital
+
+```{r}
+points_nationalhospital <- st_read(dsn = "data/nationalhospital", 
+                layer = "national_hospital_en")
+```
+
+## referral hospital
+
+```{r}
+points_referralhospital <- st_read(dsn = "data/referralhospital", 
+                layer = "hltfacp_referral")
+```
+:::
+
+### Data preperation
+
+Here we attach a column called category to each data table, and categorise it. We do this so that when we combine the data into one data variable, we will know what the category of each hospital facility is.
+
+```{r}
+points_healthcenter <- points_healthcenter %>% mutate(CATEGORY = "Health Center")
+points_healthpost <- points_healthpost %>% mutate(CATEGORY = "Health Post")
+points_referralhospital <- points_referralhospital %>% mutate(CATEGORY = "Referral Hospital")
+points_nationalhospital <- points_nationalhospital %>% mutate(CATEGORY = "National Hospital")
+```
+
+Let's remove the COVERNAME column as there are NAs in the column.
+
+```{r}
+points_healthcenter <- subset(points_healthcenter, select = -COVERNAME)
+```
+
+Let's make all he column names uppercase
+
+```{r}
+st_geometry(points_nationalhospital) <- "geometry"
+
+# Get the names of all columns except the geometry column
+column_names <- names(points_nationalhospital)[!grepl("^geometry$", names(points_nationalhospital))]
+
+# Convert column names to uppercase
+column_names_upper <- toupper(column_names)
+
+# Replace column names in the sf object
+names(points_nationalhospital)[!grepl("^geometry$", names(points_nationalhospital))] <- column_names_upper
+```
+
+```{r}
+# Drop columns "BUILDING", "STREET", "WEB", "REFERENCE", "LAT", "LONG", and "LANGUAGE"
+points_nationalhospital <- subset(points_nationalhospital, select = -c(BUILDING, STREET, WEB, REFERENCE, LAT, LONG, LANGUAGE))
+
+points_nationalhospital$DCODE <- NA
+points_nationalhospital$CCODE <- NA
+points_nationalhospital$VCODE <- NA
+points_nationalhospital$ODCODE <- NA
+points_nationalhospital$ODNAME <- NA
+
+# Rearrange the columns
+points_nationalhospital <- points_nationalhospital[, c("PCODE", "PNAME", "DCODE", "DNAME", "CCODE", "CNAME", "VCODE", "VNAME", "ODCODE", "ODNAME", "FACILITCOD", "FACILITNAM", "CATEGORY", "geometry")]
+```
+
+```{r}
+points_facilities <- rbind(points_healthcenter, points_healthpost, points_referralhospital, points_nationalhospital)
+```
+
+```{r}
+points_facilities$PNAME <- gsub("Banteay Mean Chey", "Banteay Meanchey", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Battambang", "Batdambang", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Battam Bang", "Batdambang", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Kampong Speu", "Kampong Spoe", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Kampong Spueu", "Kampong Spoe", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Kampong Thom", "Kampong Thum", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Koh Kong", "Kaoh Kong", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Kratie", "Kracheh", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Pailin", "Krong Pailin", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Sihanoukville", "Krong Preah Sihanouk", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Sihaknouk Vill", "Krong Preah Sihanouk", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Mondul Kiri", "Mondol Kiri", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Oddor Meanchey", "Otdar Mean Chey", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Oddar Mean chey", "Otdar Mean Chey", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Oddar Meanchey", "Otdar Mean Chey", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Pursat", "Pouthisat", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Ratanak Kiri", "Rotanokiri", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Siemreap", "Siemreab", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Siem Reap", "Siemreab", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Stung  Treng", "Stoeng Treng", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Stung Treng", "Stoeng Treng", points_facilities$PNAME)
+points_facilities$PNAME <- gsub("Takeo", "Takev", points_facilities$PNAME)
+```
+
+## Road Data
+
+### Importing Road Data
+
+```{r}
+cam_road_sf <- st_read("data/roads/osm_road_2022_1641440547.gpkg")
+```
+
+### Handle Invalid Geometry
+
+```{r}
+length(which(st_is_valid(cam_road_sf) == FALSE))
+```
+
+### Projection
+
+```{r}
+cam_road_sf <- st_transform(cam_road_sf, 32648)
+st_crs(cam_road_sf)
+```
+
+[**Plot Road Network on Boundary Layer:**]{.underline}
+
+```{r}
+tmap_mode('plot')
+tm_shape(cambodia_sf) + 
+  tm_polygons(col = "#F0E1D7", alpha = 0.5) + 
+  tm_shape(cam_road_sf) +
+  tm_lines(lwd = 0.05, col = "#2B2B2B")
+```
+
+# Codes
+
+![](images/clipboard-1312290806.png)
+
+In this section, I will be writing down the R codes needed to generate outputs for the EDA. This is based on the sections I have defined in the figma above.
+
+## **Total number of healthcare facilities in Cambodia**
+
+**1130**
+
+## **Facility type breakdown**
+
+|                    |                  |                       |                        |
+|-----------------|-----------------|-------------------|--------------------|
+| **Health centers** | **Health posts** | **National Hospital** | **Referral Hospitals** |
+| 965                | 89               | 9                     | 76                     |
+
+## **Cambodia's region breakdown**
+
+| Provinces | Districts | Communes | Villages |
+|-----------|-----------|----------|----------|
+| 25        | 178       | 1576     | 1580     |
+
+## **Breakdown of regions with highest number of facilities**
+
+This code finds out which village, district, province and commune each health facility is part of.
+
+::: callout-note
+In this code below, we go through each of hospital facilities in points_facilities and categorise them to the province, district, commune and village they belong to. There are some villages that do not have their own identifiable name, though they are distinct places with their own geometry column. Through our research we have realised that, ID_4 in village_sf is a distinct primary key column identifying each village. Hence, we will be replacing the villages with no names, with their distinct ID_4 values
+:::
+
+```{r}
+#| eval: false
+
+# Load necessary library
+library(sf)
+
+
+# Create a subset of the first 5 rows for points_facilities
+points_facilities_2 <- points_facilities
+
+# Add new columns for administrative area names
+points_facilities_2$province_name <- NA
+points_facilities_2$district_name <- NA
+points_facilities_2$commune_name <- NA
+points_facilities_2$village_name <- NA
+
+# Iterate over each row in points_facilities_2
+for (i in 1:nrow(points_facilities_2)) {
+  # Extract the current point
+  current_point <- points_facilities_2[i, ]
+  
+  # Perform spatial join to find the village polygon that contains the current point
+  matched_village <- village_sf[st_within(current_point, village_sf, sparse = FALSE), ]
+  
+  # Check if a match was found
+  if (nrow(matched_village) > 0) {
+    # If a match was found, update the administrative area names for the current point
+    points_facilities_2$province_name[i] <- matched_village$NAME_1[1]
+    points_facilities_2$district_name[i] <- matched_village$NAME_2[1]
+    points_facilities_2$commune_name[i] <- matched_village$NAME_3[1]
+    
+    # Check if the village name (NAME_4) is NA; if so, use ID_4 instead
+    if (is.na(matched_village$NAME_4[1])) {
+      points_facilities_2$village_name[i] <- matched_village$ID_4[1]
+    } else {
+      points_facilities_2$village_name[i] <- matched_village$NAME_4[1]
+    }
+  }
+}
+
+# Display the updated points_facilities_2
+print(points_facilities_2)
+
+
+```
+
+I'll be writing this RDS so we don't do the lengthy operation above.
+
+```{r}
+#write_rds(points_facilities_2, "data/rds/points_facilities_2.rds")
+```
+
+```{r}
+points_facilities_2 <- read_rds("data/rds/points_facilities_2.rds")
+```
+
+### Top 10 provinces with the most number of health facilities
+
+::: callout-note
+Here, we will be using the point_facilities_2 that we created earlier. It has the village, district, commune and province of each health facilitiy. Hence, when we group by province, we will get the health facilities of each province. Plotting them will give us an idea of the provinces that are the most medically advanced.
+:::
+
+```{r}
+# Load the dplyr package
+library(dplyr)
+
+# Assuming points_facilities_2 is your dataset
+# Group by province_name, count the number of facilities, and arrange in descending order
+province_facility_count <- points_facilities_2 %>%
+  group_by(province_name) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+# Select the top 10 provinces
+top_10_provinces <- head(province_facility_count, 10)
+
+# Adjusted bar plot with counts beside bars, with refined zoom and spacing
+ggplot(top_10_provinces, aes(x = reorder(province_name, -count), y = count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_text(aes(label = count), hjust = -0.1, size = 3.5) + # Place text beside bars
+  theme_minimal() +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm")) + 
+  labs(title = "Top 10 Provinces by Number of Health Facilities",
+       x = "Province",
+       y = "Number of Facilities") +
+  coord_flip() # Keep the plot horizontal
+
+```
+
+### Top 10 districts with the most number of health facilities
+
+We do the same here as above, but group by district.
+
+```{r}
+# Assuming points_facilities_2 is your dataset
+# Group by district_name, count the number of facilities, and arrange in descending order
+district_facility_count <- points_facilities_2 %>%
+  group_by(district_name) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+# Select the top 10 provinces
+top_10_district <- head(district_facility_count, 10)
+
+# Adjusted bar plot with counts beside bars, with refined zoom and spacing
+ggplot(top_10_district, aes(x = reorder(district_name, -count), y = count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_text(aes(label = count), hjust = -0.1, size = 3.5) + # Place text beside bars
+  theme_minimal() +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm")) +
+  labs(title = "Top 10 Districts by Number of Health Facilities",
+       x = "District",
+       y = "Number of Facilities") +
+  coord_flip() # Keep the plot horizontal
+```
+
+### Top 10 communes with the most number of health facilities
+
+We do the same here as above, but group by commune.
+
+```{r}
+# Assuming points_facilities_2 is your dataset
+# Group by commune_name, count the number of facilities, and arrange in descending order
+commune_facility_count <- points_facilities_2 %>%
+  group_by(commune_name) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+# Select the top 10 provinces
+top_10_commune <- head(commune_facility_count, 10)
+
+# Adjusted bar plot with counts beside bars, with refined zoom and spacing
+ggplot(top_10_commune, aes(x = reorder(commune_name, -count), y = count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_text(aes(label = count), hjust = -0.1, size = 3.5) + # Place text beside bars
+  theme_minimal() +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm")) + # Slightly adjust plot margins if necessary
+  labs(title = "Top 10 Communes by Number of Health Facilities",
+       x = "Communes",
+       y = "Number of Facilities") +
+  coord_flip() # Keep the plot horizontal
+```
+
+### Top 10 villages with the most number of health facilities
+
+We do the same here as above, but group by villages.
+
+```{r}
+# Assuming points_facilities_2 is your dataset
+# Group by village_name, count the number of facilities, and arrange in descending order
+village_facility_count <- points_facilities_2 %>%
+  group_by(village_name) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+# Select the top 10 provinces
+top_10_village <- head(village_facility_count, 10)
+
+# Adjusted bar plot with counts beside bars, with refined zoom and spacing
+ggplot(top_10_village, aes(x = reorder(village_name, -count), y = count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_text(aes(label = count), hjust = -0.1, size = 3.5) + # Place text beside bars
+  theme_minimal() +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm")) + # Slightly adjust plot margins if necessary
+  labs(title = "Top 10 villages by Number of Health Facilities",
+       x = "Communes",
+       y = "Number of Facilities") +
+  coord_flip() # Keep the plot horizontal
+```
+
+# Plotting on maps
+
+Here we will be doing various plotting methods, both by plotting the healthcare facilities discretely on a map, and a choropleth map.
+
+## Plotting facilities on cambodia map (divided by provinces)
+
+This is what the uses will first see when they have not selected any option. They will get to see the distribution of health care facilities discretely and on a choropleth map against Cambodia divided as provinces.
+
+::: panel-tabset
+## Plotting map with discrete facilities
+
+```{r}
+
+tm_shape(province_sf, , scale = 5) +
+  tm_polygons(col = "black", border.col = "white") +
+tm_shape(points_facilities_2) +
+  tm_dots(size = 0.01, col = "purple")
+```
+
+## Plotting choropleth map
+
+Here, we will be using points_facilities_2 to group by provinces and find the number healthcare facilities by province.
+
+```{r}
+
+library(dplyr)
+library(sf)
+
+
+# Process facilities_count_per_province
+facilities_count_per_province <- points_facilities_2 %>%
+  st_set_geometry(NULL) %>%  # Remove geometry if it's an sf object
+  filter(!is.na(province_name)) %>%  # Filter out rows with NA in province_name
+  group_by(province_name) %>%
+  summarise(count = n(), .groups = 'drop')  # Summarise and drop grouping
+
+# Ensure sf package's select method is used for the sf object
+province_sf_selected <- dplyr::select(province_sf, NAME_1, geometry)
+
+# Join with province_sf to add geometries
+facilities_count_per_province <- facilities_count_per_province %>%
+  left_join(province_sf_selected, by = c("province_name" = "NAME_1")) 
+
+# Convert the result back to an sf object
+facilities_count_per_province <- st_as_sf(facilities_count_per_province)
+
+
+
+```
+
+```{r}
+tm_shape(facilities_count_per_province)+
+  tm_fill("count", 
+          style = "quantile", 
+          palette = "Blues",
+          title = "Dependency ratio") +
+  tm_layout(main.title = "Distribution of Healthcaren facilities in Cambodia",
+            main.title.position = "center",
+            main.title.size = 0.9,
+            legend.height = 0.3, 
+            legend.width = 0.30,
+            legend.position = c("right", "bottom"), 
+            legend.title.size = 0.8,
+            legend.text.size = 0.6,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 1) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2)
+```
+
+### Plotting bar chart for categories of facilities in Cambodia
+
+```{r}
+facilities_count_per_category <- points_facilities_2 %>%
+  st_set_geometry(NULL) %>%  # Remove geometry if  with NA in category
+  group_by(CATEGORY) %>%
+  summarise(count = n(), .groups = 'drop')
+
+```
+
+```{r}
+ggplot(facilities_count_per_category, aes(x = CATEGORY, y = count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Facilities Count per Category In Cambodia", x = "Category", y = "Count") +
+  theme_minimal()
+```
+:::
+
+## Plotting facilities on a province (divided by districts)
+
+Let's get the geometry of the province selected by the user from province_sf.
+
+```{r}
+provinceNameSelected <- "Batdâmbâng"
+selected_row <- subset(district_sf, NAME_1 == provinceNameSelected)
+
+# Select all health facilities that match the selected province name
+selectedHealthFacilities <- subset(points_facilities_2, province_name == provinceNameSelected)
+```
+
+::: panel-tabset
+## Mapping discrete healthcare facilities on a map
+
+```{r}
+tm_shape(selected_row, scale = 5) +
+  tm_polygons(col = "black", border.col = "white") +
+tm_shape(selectedHealthFacilities) +
+  tm_dots(size = 0.1, col = "purple")
+```
+
+## Choropleth
+
+Here we find the healthcare facilities in each district of the selected province.
+
+```{r}
+# Adjusting the placeholder 'x' to the actual province name user is interested in
+province_of_interest <- provinceNameSelected
+
+# Process facilities_count_per_district by filtering, grouping, and summarising
+facilities_count_per_district <- points_facilities_2 %>%
+  st_set_geometry(NULL) %>%  # Remove geometry if it's an sf object
+  filter(!is.na(province_name) & !is.na(district_name)) %>%  # Filter out rows where both province_name and district_name are NA
+  filter(province_name == province_of_interest) %>%  # Keep only rows for the specified province
+  group_by(district_name) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  ungroup() %>%
+  mutate(province_name = province_of_interest)  # Manually add province_name back
+
+# Prepare district_sf for the join by selecting needed columns
+district_sf_selected <- dplyr::select(district_sf, NAME_1, NAME_2, geometry)
+
+# Join with district_sf to add geometries, matching on district and province names
+facilities_count_per_district <- facilities_count_per_district %>%
+  left_join(district_sf_selected, by = c("district_name" = "NAME_2", "province_name" = "NAME_1"))
+
+# Convert the result back to an sf object
+facilities_count_per_district <- st_as_sf(facilities_count_per_district)
+```
+
+```{r}
+tm_shape(facilities_count_per_district)+
+  tm_fill("count", 
+          style = "quantile", 
+          palette = "Blues",
+          title = "Dependency ratio") +
+  tm_layout(main.title = "Distribution of Healthcaren facilities in districts in 1 province",
+            main.title.position = "center",
+            main.title.size = 0.9,
+            legend.height = 0.3, 
+            legend.width = 0.30,
+            legend.position = c("left", "bottom"), 
+            legend.title.size = 0.8,
+            legend.text.size = 0.6,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 1) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2)
+```
+
+### Plotting categories of healthcare facilities in a selected province
+
+```{r}
+facilities_count_per_category <- points_facilities_2 %>%
+  st_set_geometry(NULL) %>%  # Remove geometry if it's an sf object
+  filter(!is.na(CATEGORY)) %>%  # Filter out rows with NA in category
+  filter(province_name == 'Phnom Penh') %>% 
+  group_by(CATEGORY) %>%
+  summarise(count = n(), .groups = 'drop')
+
+
+ggplot(facilities_count_per_category, aes(x = CATEGORY, y = count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Facilities Count per Category In Phnom Penh
+Province", x = "Category", y = "Count") +
+  theme_minimal()
+```
+:::
+
+## Plotting facilities on a district (divided by communes)
+
+```{r}
+provinceNameSelected <- "Batdâmbâng"
+districtNameSelected <- "Banan"
+
+# Subset to select rows from district_sf that match both the selected province and district names
+selected_row <- subset(commune_sf, NAME_1 == provinceNameSelected & NAME_2 == districtNameSelected)
+
+# Select all health facilities that match the selected province and district names
+selectedHealthFacilities <- subset(points_facilities_2, province_name == provinceNameSelected & district_name == districtNameSelected)
+
+```
+
+::: panel-tabset
+## Mapping discrete healthcare facilities on a map
+
+```{r}
+tm_shape(selected_row, scale = 5) +
+  tm_polygons(col = "black", border.col = "white") +
+tm_shape(selectedHealthFacilities) +
+  tm_dots(size = 0.1, col = "purple")
+
+
+```
+
+## Choropleth
+
+```{r}
+
+province_of_interest <- provinceNameSelected # Replace with actual province name
+district_of_interest <- districtNameSelected # Replace with actual district name
+
+# Process facilities_count_per_commune by filtering, grouping, and summarising
+facilities_count_per_commune <- points_facilities_2 %>%
+  st_set_geometry(NULL) %>%  # Remove geometry if it's an sf object
+  filter(!is.na(province_name) & !is.na(district_name) & !is.na(commune_name)) %>%  # Filter out rows where province_name, district_name, and commune_name are NA
+  filter(province_name == province_of_interest & district_name == district_of_interest) %>%  # Keep only rows for the specified province and district
+  group_by(commune_name) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  ungroup() %>%
+  mutate(province_name = province_of_interest, district_name = district_of_interest)  # Manually add province_name and district_name back
+
+# Prepare district_sf for the join by selecting needed columns
+district_sf_selected <- commune_sf %>%
+  dplyr::select(NAME_1, NAME_2, NAME_3, geometry)
+
+# Join with district_sf to add geometries, matching on province, district, and commune names
+facilities_count_per_commune <- facilities_count_per_commune %>%
+  left_join(district_sf_selected, by = c("province_name" = "NAME_1", "district_name" = "NAME_2", "commune_name" = "NAME_3"))
+
+# Convert the result back to an sf object
+facilities_count_per_commune <- st_as_sf(facilities_count_per_commune)
+```
+
+```{r}
+tm_shape(facilities_count_per_commune)+
+  tm_fill("count", 
+          style = "quantile", 
+          palette = "Blues",
+          title = "Dependency ratio") +
+  tm_layout(main.title = "Distribution of Healthcaren facilities in communes in 1 district",
+            main.title.position = "center",
+            main.title.size = 0.9,
+            legend.height = 0.3, 
+            legend.width = 0.30,
+            legend.position = c("left", "bottom"), 
+            legend.title.size = 0.8,
+            legend.text.size = 0.6,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 1) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2)
+```
+
+### Plotting categories of facilities in a selected district
+
+```{r}
+facilities_count_per_category <- points_facilities_2 %>%
+  st_set_geometry(NULL) %>%  # Remove geometry if it's an sf object
+  filter(!is.na(CATEGORY)) %>%  # Filter out rows with NA in category
+  filter(province_name == 'Phnom Penh', district_name == 'Phnom Penh') %>% 
+  group_by(CATEGORY) %>%
+  summarise(count = n(), .groups = 'drop')
+
+
+ggplot(facilities_count_per_category, aes(x = CATEGORY, y = count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Facilities Count per Category In Phnom Penh
+district", x = "Category", y = "Count") +
+  theme_minimal()
+
+```
+:::
+
+## Plotting facilities on a commune(divided by villages)
+
+```{r}
+provinceNameSelected <- "Tbong Khmum"
+districtNameSelected <- "Ou Reang Ov"
+communeNameSelected <- "Kong Chey"
+
+# Subset to select rows from district_sf that match both the selected province and district names
+selected_row <- subset(village_sf, NAME_1 == provinceNameSelected & NAME_2 == districtNameSelected & NAME_3 == communeNameSelected)
+
+# Select all health facilities that match the selected province and district names
+selectedHealthFacilities <- subset(points_facilities_2, province_name == provinceNameSelected & district_name == districtNameSelected & commune_name == communeNameSelected)
+```
+
+```{r}
+tm_shape(selected_row, scale = 5) +
+  tm_polygons(col = "black", border.col = "white") +
+tm_shape(selectedHealthFacilities) +
+  tm_dots(size = 0.1, col = "purple")
+```
+
+## UI of my screens
+
+This is the screen for exploratory data analysis. When entering the page, they will see data pertaining to the whole of Cambodia. Then, the user will be able to select what province they want explore, and then their options for district will be filtered according to the province they selected (only districts in that province will be shown). Similarly, when they select a district, only communes of that district will be shown for the commune section - and same for village with regards to the commune chosen.
+
+They will be able to see two types of maps to understand the distribution of hospital facilities more - spatial points and choropleth maps. They will also be able to see the types of facilities in their chosen area. So, this is the screen users will see when they choose spatial point maps.
+
+![](images/clipboard-2772186093.png)
+
+This is what the user will see when they choose to see choropleth maps. They will have more filters when they chose to do this. They can choose the type of grouping in data (jenkins, quartile etc) and the color theme of their liking
+
+![](images/clipboard-2414645418.png)
