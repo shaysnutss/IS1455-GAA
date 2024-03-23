@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-03-04">
+<meta name="dcterms.date" content="2024-03-24">
 
 <title>IS415-GAA - Take-home Exercise 2: Application of Spatial and Spatio-temporal Analysis Methods to Discover the Distribution of Dengue Fever in Tainan City, Taiwan</title>
 <style>
@@ -138,20 +138,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Hands-on Exercise 4</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../Hands-On_Ex/Hands-on_Ex05/Hands-on_Ex05-G lobal.html" rel="" target="">
+    <a class="dropdown-item" href="../../Hands-On_Ex/Hands-on_Ex05/Hands-on_Ex05-Global.html" rel="" target="">
  <span class="dropdown-text">Hands-on Exercise 5 - Global</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="../../Hands-On_Ex/Hands-on_Ex05/Hands-On_Ex05-Local.html" rel="" target="">
  <span class="dropdown-text">Hands-on Exercise 5 - Local</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-On_Ex/Hands-on_Ex06/Hands-on_Ex6.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 6 - Geog segmentation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-On_Ex/Hands-on_Ex07/Hands-on_Ex7.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 7</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-On_Ex/Hands-on_Ex08/Hands-on_Ex08.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 8 - new</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-On_Ex/Hands-on_Ex09/Hands-on_Ex9.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 9</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-in-class-exercise" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
- <span class="menu-text">In-class Exercise</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-in-class-exercises" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">In-class Exercises</span>
     </a>
-    <ul class="dropdown-menu" aria-labelledby="nav-menu-in-class-exercise">    
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-in-class-exercises">    
         <li>
     <a class="dropdown-item" href="../../In-class_Ex/In-class-Ex02/In-class_Ex02.html" rel="" target="">
  <span class="dropdown-text">In-class Exercise 2</span></a>
@@ -163,6 +179,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li>
     <a class="dropdown-item" href="../../In-class_Ex/In-class-Ex05/In-class-Ex05.html" rel="" target="">
  <span class="dropdown-text">In-class Exercise 5</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../In-class_Ex/In-class-Ex06/In-class_Ex06.html" rel="" target="">
+ <span class="dropdown-text">In-class Exercise 6</span></a>
   </li>  
     </ul>
   </li>
@@ -178,6 +198,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li>
     <a class="dropdown-item" href="../../Take-Home_Ex/Take-Home_Ex02/Take-Home_Ex02.html" rel="" target="">
  <span class="dropdown-text">Take home exercise 2</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Take-Home_Ex/Take-Home_Ex03/Take-Home_Ex03.html" rel="" target="">
+ <span class="dropdown-text">Take home exercise 3</span></a>
   </li>  
     </ul>
   </li>
@@ -291,7 +315,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">March 4, 2024</p>
+      <p class="date">March 24, 2024</p>
     </div>
   </div>
   
@@ -353,10 +377,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <table class="table">
 <caption>Overview Off Data Used</caption>
 <colgroup>
-<col style="width: 26%">
-<col style="width: 31%">
-<col style="width: 20%">
-<col style="width: 20%">
+<col style="width: 39%">
+<col style="width: 45%">
+<col style="width: 6%">
+<col style="width: 8%">
 </colgroup>
 <tbody>
 <tr class="odd">
@@ -1259,29 +1283,29 @@ alternative hypothesis: two.sided</code></pre>
 <span id="cb85-5"><a href="#cb85-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(local_Gi)</span>
 <span id="cb85-6"><a href="#cb85-6" aria-hidden="true" tabindex="-1"></a>HCSA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Simple feature collection with 257 features and 20 fields
+<pre><code>Simple feature collection with 257 features and 22 fields
 Geometry type: POLYGON
 Dimension:     XY
 Bounding box:  xmin: 120.0627 ymin: 22.89401 xmax: 120.2925 ymax: 23.09144
 Geodetic CRS:  TWD97
-# A tibble: 257 × 21
-   gi_star    e_gi   var_gi p_value   p_sim p_folded_sim skewness kurtosis nb   
-     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;        &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;nb&gt; 
- 1  -2.35  0.00295  1.95e-6 -1.93   0.0535          0.02     0.01   0.417  &lt;int&gt;
- 2  -2.07  0.00334  1.39e-6 -1.73   0.0831          0.04     0.02   1.08   &lt;int&gt;
- 3   0.369 0.00424  9.47e-7  0.0302 0.976           0.98     0.49   0.319  &lt;int&gt;
- 4   0.366 0.00362  1.38e-6  0.591  0.555           0.58     0.29   0.487  &lt;int&gt;
- 5  -2.65  0.00292  1.01e-6 -2.68   0.00742         0.02     0.01   0.870  &lt;int&gt;
- 6  -3.17  0.00351  1.18e-6 -3.03   0.00242         0.02     0.01  -0.0143 &lt;int&gt;
- 7  -1.25  0.00342  1.60e-6 -0.983  0.325           0.32     0.16   0.650  &lt;int&gt;
- 8  -0.277 0.00386  8.08e-7 -0.244  0.807           0.88     0.44   0.434  &lt;int&gt;
- 9   1.53  0.00438  1.42e-6  1.21   0.228           0.32     0.16   0.501  &lt;int&gt;
-10  -1.47  0.00398  1.30e-6 -1.57   0.117           0.1      0.05   0.396  &lt;int&gt;
+# A tibble: 257 × 23
+   gi_star cluster    e_gi    var_gi std_dev p_value p_sim p_folded_sim skewness
+     &lt;dbl&gt; &lt;fct&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;        &lt;dbl&gt;    &lt;dbl&gt;
+ 1  -2.35  Low     0.00295   1.95e-6 -1.93   0.0535   0.02         0.01   0.417 
+ 2  -2.07  Low     0.00334   1.39e-6 -1.73   0.0831   0.04         0.02   1.08  
+ 3   0.369 High    0.00424   9.47e-7  0.0302 0.976    0.98         0.49   0.319 
+ 4   0.366 Low     0.00362   1.38e-6  0.591  0.555    0.58         0.29   0.487 
+ 5  -2.65  Low     0.00292   1.01e-6 -2.68   0.00742  0.02         0.01   0.870 
+ 6  -3.17  Low     0.00351   1.18e-6 -3.03   0.00242  0.02         0.01  -0.0143
+ 7  -1.25  Low     0.00342   1.60e-6 -0.983  0.325    0.32         0.16   0.650 
+ 8  -0.277 Low     0.00386   8.08e-7 -0.244  0.807    0.88         0.44   0.434 
+ 9   1.53  High    0.00438   1.42e-6  1.21   0.228    0.32         0.16   0.501 
+10  -1.47  Low     0.00398   1.30e-6 -1.57   0.117    0.1          0.05   0.396 
 # ℹ 247 more rows
-# ℹ 12 more variables: wts &lt;list&gt;, VILLCODE &lt;chr&gt;, COUNTYNAME &lt;chr&gt;,
-#   TOWNNAME &lt;chr&gt;, VILLNAME &lt;chr&gt;, VILLENG &lt;chr&gt;, COUNTYID &lt;chr&gt;,
-#   COUNTYCODE &lt;chr&gt;, TOWNID &lt;chr&gt;, TOWNCODE &lt;chr&gt;, incidents &lt;int&gt;,
-#   geometry &lt;POLYGON [°]&gt;</code></pre>
+# ℹ 14 more variables: kurtosis &lt;dbl&gt;, nb &lt;nb&gt;, wts &lt;list&gt;, VILLCODE &lt;chr&gt;,
+#   COUNTYNAME &lt;chr&gt;, TOWNNAME &lt;chr&gt;, VILLNAME &lt;chr&gt;, VILLENG &lt;chr&gt;,
+#   COUNTYID &lt;chr&gt;, COUNTYCODE &lt;chr&gt;, TOWNID &lt;chr&gt;, TOWNCODE &lt;chr&gt;,
+#   incidents &lt;int&gt;, geometry &lt;POLYGON [°]&gt;</code></pre>
 </div>
 </div>
 <p>Let’s visualise it!</p>
