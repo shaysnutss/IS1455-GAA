@@ -8,7 +8,7 @@ date: "`r Sys.Date()`"
 
 ## **8.1 Overview**
 
-### Self Note: What is geographically weighted regression?
+### Self Note: What is geographically weighted regression ?
 
 Geographically Weighted Regression (GWR) is a spatial statistical technique used for exploring spatially varying relationships between a dependent variable and independent variables. It's an extension of traditional regression analysis that takes into account the spatial variability in data.
 
