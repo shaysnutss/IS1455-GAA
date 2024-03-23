@@ -27,7 +27,7 @@ pacman::p_load(sf, tidyverse, tmap, raster, spatstat, maptools, spNetwork, class
 We have different levels of the boundary data.
 
 | Name     | Description                                                   | Type |
-|------------|-------------------------------------------------|------------|
+|----------|---------------------------------------------------------------|------|
 | KHM_adm1 | This data shows the entirety of Cambodia, split by provinces. | shp  |
 | KHM_adm2 | This data shows the entirety of Cambodia, split by districts. | shp  |
 | KHM_adm3 | This data shows the entirety of Cambodia, split by communes.  | shp  |
@@ -38,7 +38,7 @@ We have different levels of the boundary data.
 We have different levels of the boundary data.
 
 | Name              | Description                                                                       | Type |
-|------------|------------------------------------------------|------------|
+|-------------------|-----------------------------------------------------------------------------------|------|
 | Health center     | This data shows the distribution of health center facilities across Cambodia.     | shp  |
 | Health post       | This data shows the distribution of health post facilities across Cambodia.       | shp  |
 | National hospital | This data shows the distribution of national hospital facilities across Cambodia. | shp  |
@@ -356,7 +356,7 @@ In this section, I will be writing down the R codes needed to generate outputs f
 ## **Facility type breakdown**
 
 |                    |                  |                       |                        |
-|-----------------|-----------------|-------------------|--------------------|
+|--------------------|------------------|-----------------------|------------------------|
 | **Health centers** | **Health posts** | **National Hospital** | **Referral Hospitals** |
 | 965                | 89               | 9                     | 76                     |
 
